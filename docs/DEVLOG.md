@@ -282,8 +282,8 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
     único `*rand.Rand`.
   - `internal/store/bulk.go`: `CreateMany` por entidad, `Count`, `Reset` y
     `RecalculateAllBookSales`.
-  - Dataset resultante: **50 autores, 300 libros, 1640 reseñas
-    (1–10 por libro), 2542 filas de ventas (5–12 años por libro)**.
+  - Dataset resultante: **50 autores, 300 libros, 1633 reseñas
+    (1–10 por libro), 2492 filas de ventas (5–12 años por libro)**.
 
 - **Origen de los datos:** inventados y generados proceduralmente combinando
   listas de vocabulario. **No se consulta ninguna API externa** ni se copian
@@ -335,14 +335,22 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
     promedios de puntaje convergerían a 3 y el top 10 de la §5.2 sería un empate
     masivo resuelto por el desempate. `popularity` es exponencial y se eleva al
     cuadrado, para que haya pocas superventas y una cola larga de libros
-    discretos: las ventas van de **801 a 797.208**.
-  - **Ventas decrecientes desde el año de publicación** (cae entre 45% y 75%
-    por año, con ruido), en vez de uniformes. Es lo que hace que la pregunta del
-    top 5 por año tenga sentido.
+    discretos: las ventas van de **847 a 882.538**.
+  - **Ventas decrecientes desde el año de publicación** (cae un 40% por año, con
+    ruido), en vez de uniformes. Es lo que hace que la pregunta del top 5 por
+    año tenga sentido.
+  - **Un 18% de los libros llegan a su pico de ventas 2 a 5 años después de
+    publicarse** en vez de el primer año (boca a boca, un premio, una
+    adaptación). Este rasgo se agregó durante la Fase 5, al ver que sin él la
+    columna "top 5 de su año de publicación" del top 50 daba **Sí en las 50
+    filas**: si la única forma de vender mucho en total es arrasar el primer
+    año, entonces todo libro muy vendido está en el top 5 de su año y la
+    columna no informa nada. Con los libros de despegue lento, el top 50 queda
+    en **35 Sí y 15 No**.
   - **Ventana de publicación 1962–2020**, no 1900–2026. Los libros siguen
     vendiendo 5–12 años después de publicarse, así que un año calendario
     cualquiera tiene decenas de libros compitiendo y el "top 5 del año" es
-    selectivo de verdad: **109 de 300 libros (36%)** entran, ni todos ni casi
+    selectivo de verdad: **80 de 300 libros (27%)** entran, ni todos ni casi
     ninguno.
   - **Reparto despareja de libros por autor** (primero uno a cada autor, el
     resto por sorteo con pesos): la tabla de la §5.1 tiene autores de 1 libro y
@@ -357,7 +365,7 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
     0 reseñas con score fuera de 1–5.
   - **Determinismo:** dos bases sembradas por separado con la semilla 42 dan el
     mismo SHA-1 sobre el volcado ordenado de las 4 tablas
-    (`1f4f9b0d…`); con `-seed 7` el hash cambia.
+    (`895cf750…`); con `-seed 7` el hash cambia.
   - **Idempotencia:** `--reset` sobre una base ya sembrada reproduce ese mismo
     hash, ids incluidos. Sin `--reset` sale con código 1, el mensaje
     `la base ya tiene datos (50 autores, 300 libros, …); usa --reset` y deja las
@@ -365,3 +373,118 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
   - App levantada contra los datos sembrados: los 4 listados y las páginas
     profundas (`/authors?page=3`, `/books?page=15`) responden 200, sin un solo
     `level=ERROR` en el log.
+
+---
+
+## Fase 5 — Queries de reporte y vistas de tablas
+
+- **Tiempo aproximado:** 3h
+
+- **Qué se hizo:**
+  - `internal/store/stats.go` con las tres consultas del enunciado, comentadas.
+  - `internal/handlers/tables.go` y tres rutas nuevas: `/authors/stats`,
+    `/books/top-rated` y `/books/top-selling`.
+  - Tres plantillas: la tabla de autores con encabezados clicables y formulario
+    de filtros, el ranking del top 10 con su mejor y peor reseña enfrentadas, y
+    la tabla del top 50.
+  - **16 tests nuevos de las queries** (`stats_test.go`) contra un dataset de 4
+    autores y 4 libros armado a mano, más tests de handler con `httptest`.
+
+- **Las tres consultas:**
+
+  1. **Tabla de autores.** El problema central es el *fan-out*: unir
+     `authors`, `books` y `reviews` en un solo JOIN produce una fila por cada
+     combinación libro-reseña, y `SUM(number_of_sales)` se multiplica por la
+     cantidad de reseñas. Se agregan las métricas en dos CTE separados
+     (`book_stats` y `review_stats`), cada uno con una fila por autor, y recién
+     ahí se hace `LEFT JOIN`. El test lo verifica con un caso concreto: la
+     autora Alba tiene 5 reseñas repartidas en 2 libros, y sus ventas reales son
+     1050; con el JOIN ingenuo darían 150·3 + 900·2 = **2250**.
+     Los `LEFT JOIN` son los que dejan aparecer al autor sin libros.
+  2. **Top 10 mejor evaluados.** Funciones de ventana (`ROW_NUMBER()` con
+     `PARTITION BY book_id`) numeran las reseñas de cada libro por puntaje en
+     los dos sentidos, y se toma la primera de cada orden. Requiere SQLite ≥
+     3.25. Si un libro tiene una sola reseña, su mejor y su peor reseña son la
+     misma: es correcto, y la vista lo aclara con una nota.
+  3. **Top 50 más vendidos.** `RANK() OVER (PARTITION BY year ORDER BY sales
+     DESC)` y un `EXISTS` para el flag. Se usa `RANK()` y no `ROW_NUMBER()` para
+     que un empate en ventas ocupe la misma posición: si tres libros empatan
+     primeros, los tres están en el top 5.
+
+- **Interpretación de la parte ambigua del enunciado:** un libro estuvo en el
+  top 5 de ventas de su año de publicación si, rankeando **todos** los libros
+  por sus ventas de ese año calendario, quedó entre los 5 primeros. Es decir que
+  compite contra todos los que vendieron ese año, no solo contra los publicados
+  ese año. Queda anotado en el SQL y en la propia vista.
+
+- **Problemas encontrados:**
+  1. **Un panic por orden de evaluación no especificado.** `/authors/stats` con
+     un filtro numérico no numérico (`?min_books=tres`) devolvía 500 con
+     `runtime error: invalid memory address or nil pointer dereference` dentro
+     del escaper de `html/template`. El síntoma era desconcertante: fallaba con
+     `min_books` pero no con `max_books`, y el mismo dato construido a mano
+     renderizaba bien. El stack trace mostró que el string que se estaba
+     imprimiendo tenía un puntero corrupto (`0x70`).
+     La causa: `toStoreFilter` devolvía el struct y el slice de errores en el
+     mismo `return`, y los campos del struct eran llamadas a un closure que
+     hacía `append` sobre ese mismo slice:
+     ```go
+     return store.AuthorFilter{
+         MinBooks: intField(f.MinBooks, "libros (mínimo)"), // hace append a ignored
+         ...
+     }, ignored                                             // lee ignored
+     ```
+     La especificación de Go solo ordena las **llamadas a función** entre sí, de
+     izquierda a derecha; no dice nada sobre cuándo se lee `ignored`, que esas
+     llamadas están modificando. Se resolvió calculando cada campo en su propia
+     variable antes de armar el struct.
+  2. **Un test que asumía mal.** La comprobación de que el flag del top 5
+     "discrimina" fallaba porque daba **Sí en las 50 filas**. No era un bug de
+     la query: verificado en SQL aparte, de los 300 libros solo 109 estaban en
+     el top 5 de su año, pero los 50 más vendidos lo estaban todos, porque en
+     ese dataset la única forma de vender mucho en total era arrasar el primer
+     año. Se cambió el test para comparar contra una verdad de referencia
+     calculada en SQL, y se agregó al seed un 18% de libros de despegue lento
+     (ver Fase 4).
+
+- **Decisiones tomadas y alternativas descartadas:**
+  - **Whitelist de columnas para el `ORDER BY`.** `ORDER BY` no admite
+    placeholders, así que la única forma segura de ordenar por una columna que
+    elige el usuario es traducir su nombre con un mapa: lo que no está en el
+    mapa nunca llega al SQL. Un test pasa `"'; DROP TABLE authors;--"` como
+    columna y verifica que caiga en el orden por defecto y que la tabla siga
+    viva. La dirección se valida con un `EqualFold` contra `"desc"`.
+  - **Las condiciones del `WHERE` se arman en una función pura**
+    (`AuthorFilter.conditions()`) que devuelve fragmentos y argumentos por
+    separado. Se testea sin base: verifica que cada fragmento tenga exactamente
+    un `?` y que el valor del usuario no aparezca incrustado en el SQL.
+  - **Los filtros comparan contra la expresión de la columna**
+    (`COALESCE(bs.books_count, 0) >= ?`), no contra el alias del `SELECT`.
+    SQLite acepta el alias como extensión, pero no es SQL estándar.
+  - **Desempate por id en los tres rankings.** Sin él, dos libros con el mismo
+    promedio y la misma cantidad de reseñas podrían intercambiarse entre
+    corridas y los tests serían intermitentes.
+  - **Un filtro por score deja fuera a los autores sin reseñas**, porque su
+    promedio es NULL y `NULL >= 3` no es verdadero. Es lo correcto —no se puede
+    afirmar que cumplan— pero es lo bastante sorprendente como para avisarlo en
+    la propia vista.
+  - **Los filtros no numéricos se ignoran y se avisa**, en vez de fallar o de
+    descartarlos en silencio.
+  - **`AvgScore` es `sql.NullFloat64` y no `float64`.** Un autor sin reseñas no
+    tiene promedio 0: no tiene promedio. La vista muestra «—».
+  - **Los encabezados ordenables se arman en el handler**, con la URL completa
+    ya calculada (filtros vigentes incluidos y dirección alternada). La
+    plantilla no sabe nada de query params.
+
+- **Verificación:**
+  - `gofmt` sin salida, `go vet ./...` limpio, **suite completa en verde con
+    `-race`** (`database`, `store`, `handlers`).
+  - Los tests de las queries comparan contra valores calculados a mano sobre un
+    dataset de 4 autores: promedios (4.0, 5.0, NULL), ventas por autor
+    (1050, 300, 20, 0), mejor y peor reseña con desempate por up-votes, y el
+    flag del top 5 en un año con 7 libros compitiendo (los 5 primeros sí, los 2
+    últimos no).
+  - Smoke test de las tres vistas contra la base sembrada: **25 comprobaciones,
+    0 fallas**, sin `level=ERROR` en el log. Incluye el intento de inyección por
+    `?sort=`, la coexistencia de `/authors/stats` con `/authors/{id}`, y la
+    comparación del flag del top 50 contra la verdad calculada en SQL (35 de 50).

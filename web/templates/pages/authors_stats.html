@@ -1,0 +1,83 @@
+{{define "title"}}Tabla de autores{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Tabla de autores</h1>
+    <p class="lead">Libros publicados, score promedio y ventas totales.
+      Clickea cualquier encabezado para ordenar por esa columna.</p>
+  </div>
+</div>
+
+<form method="get" action="/authors/stats" class="filters">
+  <div class="filter">
+    <label for="name">Nombre contiene</label>
+    <input type="text" id="name" name="name" value="{{.Filters.Name}}" placeholder="p. ej. Mendoza">
+  </div>
+  <div class="filter">
+    <label>Libros publicados</label>
+    <div class="range">
+      <input type="number" name="min_books" value="{{.Filters.MinBooks}}" placeholder="mín" min="0">
+      <input type="number" name="max_books" value="{{.Filters.MaxBooks}}" placeholder="máx" min="0">
+    </div>
+  </div>
+  <div class="filter">
+    <label>Score promedio</label>
+    <div class="range">
+      <input type="number" name="min_score" value="{{.Filters.MinScore}}" placeholder="mín" min="1" max="5" step="0.1">
+      <input type="number" name="max_score" value="{{.Filters.MaxScore}}" placeholder="máx" min="1" max="5" step="0.1">
+    </div>
+  </div>
+  <div class="filter">
+    <label>Ventas totales</label>
+    <div class="range">
+      <input type="number" name="min_sales" value="{{.Filters.MinSales}}" placeholder="mín" min="0">
+      <input type="number" name="max_sales" value="{{.Filters.MaxSales}}" placeholder="máx" min="0">
+    </div>
+  </div>
+  <div class="filter filter-actions">
+    <button type="submit" class="btn">Filtrar</button>
+    <a class="btn btn-secondary" href="/authors/stats">Limpiar</a>
+  </div>
+</form>
+
+{{if .Ignored}}
+<p class="alert">Se ignoraron estos filtros porque no son números:
+  {{range $i, $f := .Ignored}}{{if $i}}, {{end}}{{$f}}{{end}}.</p>
+{{end}}
+
+{{if .Rows}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        {{range .Headers}}
+        <th {{if .Numeric}}class="num"{{end}}>
+          <a class="sortable{{if .Active}} is-active{{end}}" href="{{.URL}}">
+            {{.Label}}{{if .Active}}<span class="sort-arrow">{{if .Ascending}}▲{{else}}▼{{end}}</span>{{end}}
+          </a>
+        </th>
+        {{end}}
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td><a href="/authors/{{.ID}}">{{.Name}}</a></td>
+        <td class="num">{{.BooksCount}}</td>
+        <td class="num">
+          {{if .AvgScore.Valid}}{{printf "%.2f" .AvgScore.Float64}}{{else}}<span class="muted">—</span>{{end}}
+        </td>
+        <td class="num">{{thousands .TotalSales}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+<p class="hint">{{len .Rows}} autor(es). El score promedio es «—» cuando ninguno
+  de sus libros tiene reseñas; por eso un filtro por score deja fuera a esos autores.</p>
+{{else}}
+<p class="empty">Ningún autor cumple estos filtros.
+  <a href="/authors/stats">Limpiar filtros</a>.</p>
+{{end}}
+{{end}}

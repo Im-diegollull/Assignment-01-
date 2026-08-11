@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"io/fs"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"bookreviews/web"
 )
@@ -50,4 +52,30 @@ var templateFuncs = template.FuncMap{
 		}
 		return "No"
 	},
+
+	// thousands separa los miles con puntos. Las ventas llegan a seis cifras y
+	// sin separador las columnas son imposibles de comparar de un vistazo.
+	"thousands": thousands,
+
+	// add existe solo para numerar las filas de un ranking a partir del índice
+	// de range, que empieza en 0.
+	"add": func(a, b int) int { return a + b },
+}
+
+func thousands(n int) string {
+	digits := strconv.Itoa(n)
+	sign := ""
+	if strings.HasPrefix(digits, "-") {
+		sign, digits = "-", digits[1:]
+	}
+
+	var out strings.Builder
+	for i, digit := range digits {
+		// Un punto cada tres dígitos, contando desde la derecha.
+		if i > 0 && (len(digits)-i)%3 == 0 {
+			out.WriteByte('.')
+		}
+		out.WriteRune(digit)
+	}
+	return sign + out.String()
 }

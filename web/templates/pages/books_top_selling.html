@@ -1,0 +1,54 @@
+{{define "title"}}Top 50 más vendidos{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Top 50 libros más vendidos</h1>
+    <p class="lead">De todos los tiempos, con las ventas totales del autor y si
+      el libro entró al top 5 de ventas de su año de publicación.</p>
+  </div>
+</div>
+
+{{if .}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Libro</th>
+        <th>Autor</th>
+        <th class="num">Publicación</th>
+        <th class="num">Ventas del libro</th>
+        <th class="num">Ventas del autor</th>
+        <th>Top 5 de su año</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $index, $book := .}}
+      <tr>
+        <td class="num muted">{{add $index 1}}</td>
+        <td><a href="/books/{{$book.BookID}}">{{$book.BookName}}</a></td>
+        <td><a href="/authors/{{$book.AuthorID}}">{{$book.AuthorName}}</a></td>
+        <td class="num">{{$book.PublicationYear}}</td>
+        <td class="num">{{thousands $book.BookSales}}</td>
+        <td class="num">{{thousands $book.AuthorSales}}</td>
+        <td>
+          {{if $book.InTop5OfYear}}
+            <span class="badge badge-yes">Sí</span>
+          {{else}}
+            <span class="badge badge-no">No</span>
+          {{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+<p class="hint">«Top 5 de su año» compara las ventas del libro durante su año de
+  publicación contra las de <em>todos</em> los libros que vendieron ese mismo
+  año calendario, no solo contra los publicados ese año.</p>
+{{else}}
+<p class="empty">Todavía no hay ventas cargadas.
+  <a href="/sales/new">Cargar ventas</a>.</p>
+{{end}}
+{{end}}

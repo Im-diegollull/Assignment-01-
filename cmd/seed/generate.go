@@ -24,6 +24,10 @@ const (
 	lastBirthYear  = 1985
 	minAuthorAge   = 24 // años entre el nacimiento del autor y su primer libro
 	maxCalendarEnd = 2026
+
+	// slowBurnerShare es la proporción de libros que llegan a su pico de ventas
+	// años después de publicarse, en vez de el primer año.
+	slowBurnerShare = 0.18
 )
 
 // generator concentra la aleatoriedad en un único *rand.Rand. Todas las
@@ -47,9 +51,15 @@ type bookPlan struct {
 	// un empate masivo decidido por el desempate.
 	quality float64
 
-	// popularity es la magnitud de ventas del primer año, en escala
-	// logarítmica: la mayoría vende poco y unos pocos venden muchísimo.
+	// popularity es la magnitud de ventas del libro: la mayoría vende poco y
+	// unos pocos venden muchísimo.
 	popularity float64
+
+	// slowBurner marca los libros que no despegan el año en que salen sino
+	// varios años después (boca a boca, un premio, una adaptación). Sin ellos,
+	// todo libro muy vendido lo es porque arrasó su primer año, y la columna
+	// "top 5 de su año de publicación" del top 50 daría "Sí" en las 50 filas.
+	slowBurner bool
 }
 
 // pick elige un elemento al azar de una lista.
@@ -138,6 +148,7 @@ func (g *generator) books(authors []models.Author) []bookPlan {
 			quality: clampFloat(3.4+g.rnd.NormFloat64()*0.9, 1.2, 4.9),
 			// Exponencial: pocas superventas, larga cola de libros discretos.
 			popularity: g.rnd.ExpFloat64(),
+			slowBurner: g.rnd.Float64() < slowBurnerShare,
 		})
 	}
 	return plans
@@ -217,8 +228,11 @@ func (g *generator) reviews(plans []bookPlan) []models.Review {
 }
 
 // sales genera al menos 5 años consecutivos de ventas por libro, desde su año
-// de publicación. Las ventas caen año a año con ruido: el primer año es el
-// mejor, como suele pasar con las novedades.
+// de publicación.
+//
+// La mayoría de los libros sigue la curva de una novedad: el primer año es el
+// mejor y desde ahí cae. Los slowBurner hacen lo contrario, arrancan flojo y
+// llegan a su pico varios años después.
 func (g *generator) sales(plans []bookPlan) []models.Sale {
 	sales := make([]models.Sale, 0, len(plans)*8)
 
@@ -232,12 +246,20 @@ func (g *generator) sales(plans []bookPlan) []models.Sale {
 			span = minSalesYears // nunca por debajo del mínimo del enunciado
 		}
 
-		// popularity es exponencial: elevarla convierte esa cola larga en
-		// órdenes de magnitud de diferencia entre un libro discreto y un éxito.
-		current := 400 + plan.popularity*plan.popularity*9000
+		// popularity es exponencial: elevarla al cuadrado convierte esa cola
+		// larga en órdenes de magnitud de diferencia entre un libro discreto y
+		// un éxito.
+		magnitude := 400 + plan.popularity*plan.popularity*9000
+
+		// El pico cae en el primer año salvo que el libro sea de los que
+		// despegan tarde; nunca después del anteúltimo año con datos.
+		peak := 0
+		if plan.slowBurner {
+			peak = min(g.intBetween(2, 5), span-2)
+		}
 
 		for offset := range span {
-			units := int(current * (0.75 + g.rnd.Float64()*0.5))
+			units := int(magnitude * salesCurve(offset, peak) * (0.8 + g.rnd.Float64()*0.4))
 			if units < 0 {
 				units = 0
 			}
@@ -246,10 +268,19 @@ func (g *generator) sales(plans []bookPlan) []models.Sale {
 				Year:   startYear + offset,
 				Sales:  units,
 			})
-			current *= 0.45 + g.rnd.Float64()*0.3 // decae entre 45% y 75% por año
 		}
 	}
 	return sales
+}
+
+// salesCurve devuelve el factor de ventas del año offset para un libro cuyo
+// pico está en el año peak. Antes del pico sube desde un 12%; después cae un
+// 40% por año.
+func salesCurve(offset, peak int) float64 {
+	if offset < peak {
+		return 0.12 + 0.88*float64(offset)/float64(peak)
+	}
+	return math.Pow(0.6, float64(offset-peak))
 }
 
 // dateIn arma una fecha ISO dentro del año dado. El día se limita a 28 para no

@@ -1,0 +1,219 @@
+package handlers
+
+import (
+	"net/http"
+	"net/url"
+	"strconv"
+
+	"bookreviews/internal/store"
+)
+
+// Cantidades que pide el enunciado para cada tabla.
+const (
+	topRatedLimit   = 10
+	topSellingLimit = 50
+)
+
+// columnHeader es el encabezado clicable de una columna ordenable. El handler
+// arma la URL completa para que la plantilla no tenga que saber nada de query
+// params ni de cómo se alterna la dirección.
+type columnHeader struct {
+	Label     string
+	URL       string
+	Active    bool
+	Ascending bool
+	Numeric   bool
+}
+
+type authorStatsPage struct {
+	Rows    []store.AuthorStatsRow
+	Headers []columnHeader
+	Filters authorStatsFilters
+	// Ignored lista los filtros que se descartaron por no ser numéricos, para
+	// no fallar en silencio cuando alguien escribe "tres" en un campo de número.
+	Ignored []string
+}
+
+// authorStatsFilters conserva lo que el usuario escribió, tal cual, para
+// re-dibujar el formulario con sus valores.
+type authorStatsFilters struct {
+	Name     string
+	MinBooks string
+	MaxBooks string
+	MinScore string
+	MaxScore string
+	MinSales string
+	MaxSales string
+}
+
+func (h *Handler) authorStats(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	filters := authorStatsFilters{
+		Name:     query.Get("name"),
+		MinBooks: query.Get("min_books"),
+		MaxBooks: query.Get("max_books"),
+		MinScore: query.Get("min_score"),
+		MaxScore: query.Get("max_score"),
+		MinSales: query.Get("min_sales"),
+		MaxSales: query.Get("max_sales"),
+	}
+
+	filter, ignored := filters.toStoreFilter()
+	filter.SortBy = query.Get("sort")
+	filter.Dir = query.Get("dir")
+
+	rows, err := h.store.Authors.AuthorStats(r.Context(), filter)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+
+	h.render(w, http.StatusOK, "authors_stats.html", authorStatsPage{
+		Rows:    rows,
+		Headers: authorStatsHeaders(query),
+		Filters: filters,
+		Ignored: ignored,
+	})
+}
+
+// toStoreFilter convierte los campos de texto del formulario en el filtro
+// tipado del store, y devuelve las etiquetas de los que hubo que descartar.
+func (f authorStatsFilters) toStoreFilter() (store.AuthorFilter, []string) {
+	var ignored []string
+
+	intField := func(raw, label string) *int {
+		value, ok := parseOptionalInt(raw)
+		if !ok {
+			ignored = append(ignored, label)
+		}
+		return value
+	}
+	floatField := func(raw, label string) *float64 {
+		value, ok := parseOptionalFloat(raw)
+		if !ok {
+			ignored = append(ignored, label)
+		}
+		return value
+	}
+
+	// Cada campo se resuelve en su propia variable antes de armar el struct.
+	// Poner las llamadas dentro del literal y devolver `ignored` en el mismo
+	// return deja el resultado a merced del orden de evaluación: la
+	// especificación de Go solo garantiza que las llamadas a función se
+	// evalúen de izquierda a derecha entre sí, no respecto de la lectura de una
+	// variable que esas mismas llamadas van modificando.
+	minBooks := intField(f.MinBooks, "libros (mínimo)")
+	maxBooks := intField(f.MaxBooks, "libros (máximo)")
+	minScore := floatField(f.MinScore, "score (mínimo)")
+	maxScore := floatField(f.MaxScore, "score (máximo)")
+	minSales := intField(f.MinSales, "ventas (mínimo)")
+	maxSales := intField(f.MaxSales, "ventas (máximo)")
+
+	filter := store.AuthorFilter{
+		NameLike: f.Name,
+		MinBooks: minBooks,
+		MaxBooks: maxBooks,
+		MinScore: minScore,
+		MaxScore: maxScore,
+		MinSales: minSales,
+		MaxSales: maxSales,
+	}
+	return filter, ignored
+}
+
+// authorStatsHeaders arma un encabezado por columna ordenable, conservando los
+// filtros vigentes en el enlace y alternando la dirección de la columna activa.
+func authorStatsHeaders(query url.Values) []columnHeader {
+	columns := []struct {
+		key     string
+		label   string
+		numeric bool
+	}{
+		{"name", "Autor", false},
+		{"books", "Libros publicados", true},
+		{"avg_score", "Score promedio", true},
+		{"total_sales", "Ventas totales", true},
+	}
+
+	activeSort := query.Get("sort")
+	if activeSort == "" {
+		activeSort = "name"
+	}
+	activeAsc := query.Get("dir") != "desc"
+
+	headers := make([]columnHeader, 0, len(columns))
+	for _, column := range columns {
+		isActive := column.key == activeSort
+
+		// Al clickear la columna activa se invierte el orden; al clickear otra,
+		// se empieza por ascendente.
+		nextDir := "asc"
+		if isActive && activeAsc {
+			nextDir = "desc"
+		}
+
+		next := cloneQuery(query)
+		next.Set("sort", column.key)
+		next.Set("dir", nextDir)
+
+		headers = append(headers, columnHeader{
+			Label:     column.label,
+			URL:       "/authors/stats?" + next.Encode(),
+			Active:    isActive,
+			Ascending: isActive && activeAsc,
+			Numeric:   column.numeric,
+		})
+	}
+	return headers
+}
+
+func (h *Handler) topRatedBooks(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.store.Books.TopRated(r.Context(), topRatedLimit)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	h.render(w, http.StatusOK, "books_top_rated.html", rows)
+}
+
+func (h *Handler) topSellingBooks(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.store.Books.TopSelling(r.Context(), topSellingLimit)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	h.render(w, http.StatusOK, "books_top_selling.html", rows)
+}
+
+// parseOptionalInt devuelve nil para un campo vacío (sin filtro) y ok=false
+// cuando hay texto que no es un número.
+func parseOptionalInt(raw string) (*int, bool) {
+	if raw == "" {
+		return nil, true
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return nil, false
+	}
+	return &value, true
+}
+
+func parseOptionalFloat(raw string) (*float64, bool) {
+	if raw == "" {
+		return nil, true
+	}
+	value, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		return nil, false
+	}
+	return &value, true
+}
+
+func cloneQuery(query url.Values) url.Values {
+	clone := make(url.Values, len(query))
+	for key, values := range query {
+		clone[key] = append([]string(nil), values...)
+	}
+	return clone
+}

@@ -1,0 +1,49 @@
+{{define "title"}}Top 10 mejor evaluados{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Top 10 libros mejor evaluados</h1>
+    <p class="lead">De todos los tiempos, por promedio de puntaje, con su reseña
+      mejor y peor evaluada.</p>
+  </div>
+</div>
+
+{{if .}}
+<ol class="ranking">
+  {{range .}}
+  <li class="ranking-item">
+    <div class="ranking-head">
+      <div>
+        <h2><a href="/books/{{.BookID}}">{{.BookName}}</a></h2>
+        <p class="ranking-meta">
+          <a href="/authors/{{.AuthorID}}">{{.AuthorName}}</a>
+          · {{.ReviewsCount}} reseña{{if ne .ReviewsCount 1}}s{{end}}
+        </p>
+      </div>
+      <span class="score-badge">{{printf "%.2f" .AvgScore}}</span>
+    </div>
+
+    <div class="review-pair">
+      <div class="review review-best">
+        <span class="review-label">Mejor reseña · {{.BestScore}}/5</span>
+        <p>{{.BestReview}}</p>
+      </div>
+      <div class="review review-worst">
+        <span class="review-label">Peor reseña · {{.WorstScore}}/5</span>
+        <p>{{.WorstReview}}</p>
+      </div>
+    </div>
+
+    {{if eq .ReviewsCount 1}}
+    <p class="hint">Este libro tiene una sola reseña, así que su mejor y su peor
+      reseña son la misma.</p>
+    {{end}}
+  </li>
+  {{end}}
+</ol>
+{{else}}
+<p class="empty">Todavía no hay reseñas cargadas, así que no hay ranking.
+  <a href="/reviews/new">Crear una reseña</a>.</p>
+{{end}}
+{{end}}

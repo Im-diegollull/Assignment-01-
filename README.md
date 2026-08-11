@@ -51,7 +51,7 @@ go run ./cmd/seed -seed 7      # otra semilla, otro dataset
 ```
 
 Genera 50 autores, 300 libros, entre 1 y 10 reseñas por libro y entre 5 y 12
-años de ventas por libro (~1640 reseñas y ~2540 filas de ventas). Tarda menos
+años de ventas por libro (1633 reseñas y 2492 filas de ventas). Tarda menos
 de un segundo.
 
 Los datos son **inventados y generados proceduralmente**: se combinan listas de
@@ -92,6 +92,6 @@ La dependencia va en un solo sentido: `handlers → store → database`, con
 - [x] Fase 2 — Base de datos
 - [x] Fase 3 — CRUD de los 4 modelos
 - [x] Fase 4 — Seed de datos
-- [ ] Fase 5 — Queries + vistas de tablas
+- [x] Fase 5 — Queries + vistas de tablas
 - [ ] Fase 6 — Búsqueda paginada
 - [ ] Fase 7 — Pulido

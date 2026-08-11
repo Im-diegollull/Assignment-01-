@@ -51,6 +51,12 @@ func (h *Handler) Routes() http.Handler {
 
 	// El patrón literal /authors/new gana sobre el wildcard /authors/{id}:
 	// ServeMux elige siempre el más específico, sin importar el orden.
+	// Tablas de reporte. Van antes conceptualmente, pero el orden de registro
+	// no importa: ServeMux elige por especificidad, no por orden.
+	mux.HandleFunc("GET /authors/stats", h.authorStats)
+	mux.HandleFunc("GET /books/top-rated", h.topRatedBooks)
+	mux.HandleFunc("GET /books/top-selling", h.topSellingBooks)
+
 	mux.HandleFunc("GET /authors", h.authorList)
 	mux.HandleFunc("GET /authors/new", h.authorNew)
 	mux.HandleFunc("POST /authors", h.authorCreate)
