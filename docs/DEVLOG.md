@@ -267,3 +267,101 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
   escrito, la paginación (25 autores → 20 + 5, "21–25 de 25"), el rechazo del
   año duplicado y el recálculo del total del libro en las cuatro situaciones
   (dos altas → 3800, edición → 2800, borrado → 500, rechazo → sin cambios).
+
+---
+
+## Fase 4 — Seed de datos
+
+- **Tiempo aproximado:** 1h 45m
+
+- **Qué se hizo:**
+  - `cmd/seed` con tres flags: `-db`, `--reset` y `-seed` (semilla, default 42).
+  - `corpus.go`: listas de vocabulario (nombres, apellidos, países, sustantivos
+    y lugares para títulos, plantillas de resumen, reseñas por tramo de puntaje).
+  - `generate.go`: el generador, con toda la aleatoriedad concentrada en un
+    único `*rand.Rand`.
+  - `internal/store/bulk.go`: `CreateMany` por entidad, `Count`, `Reset` y
+    `RecalculateAllBookSales`.
+  - Dataset resultante: **50 autores, 300 libros, 1640 reseñas
+    (1–10 por libro), 2542 filas de ventas (5–12 años por libro)**.
+
+- **Origen de los datos:** inventados y generados proceduralmente combinando
+  listas de vocabulario. **No se consulta ninguna API externa** ni se copian
+  datos reales; el profesor confirmó que la forma de poblar la base es decisión
+  del grupo. La ventaja para la corrección es que el dataset es reproducible:
+  con la semilla 42, cualquiera del grupo ve exactamente los mismos rankings.
+
+- **Problemas encontrados:**
+  1. **Un helper de capitalización que sorteaba dos veces.** Estaba escrito como
+     `strings.ToUpper(pick(g, titleNouns)[:1]) + pick(g, titleNouns)[1:]`, con
+     dos llamadas a `pick`: tomaba la primera letra de una palabra y el resto de
+     **otra**. Produjo títulos como *"Aértigo en las afueras"* (la `A` de
+     "atlas" + "értigo" de "vértigo") y *"Raro en Bahía Negra"* (`R` de "reloj"
+     + "aro" de "faro"). Se reemplazó por una función `capitalize(s)` que recibe
+     la cadena ya elegida.
+  2. **Cortar UTF-8 por byte.** El mismo helper usaba `s[:1]`, que con palabras
+     acentuadas parte el carácter al medio. `capitalize` convierte a `[]rune`.
+  3. **Concordancia de género.** Los nombres de pila mezclan masculino y
+     femenino y el generador no sabe cuál le tocó a cada autor, así que salían
+     descripciones como *"Benjamín Ossandón — Traductora y narradora dedicado
+     a…"*. Se dejaron solo formas invariables ("novelista", "cronista") y se
+     reescribieron los rasgos gendered (*"Se lo asocia con…"* →
+     *"Su nombre se asocia con…"*). Lo mismo en los resúmenes: se sacaron los
+     participios que concuerdan con el personaje (*"deja a una topógrafa
+     varado"*).
+  4. **Contracciones del español.** Los lugares del corpus llevan artículo
+     ("el sur", "el barrio Franklin"), así que las plantillas producían *"volver
+     a el barrio Franklin"*. Se agregó `contractPrepositions`, que reemplaza
+     `" a el "` por `" al "` y `" de el "` por `" del "`. El espacio final del
+     patrón es lo que evita romper "de ella" o "a ellos".
+  5. **Resúmenes que empezaban en minúscula**, porque varias plantillas abren
+     con el personaje (*"una traductora acepta…"*). Se capitaliza la frase ya
+     armada.
+
+- **Decisiones tomadas y alternativas descartadas:**
+  - **El seed no escribe SQL.** Sembrar con los `Create` de a uno serían ~4500
+    transacciones, y cada COMMIT en SQLite es un fsync. Se agregó
+    `internal/store/bulk.go` con un `CreateMany` por entidad: una transacción y
+    un prepared statement reutilizado para todas las filas. El seed completo
+    tarda **~0.3 s**. La alternativa —dejar que `cmd/seed` arme sus propios
+    INSERT— habría roto la regla de que todo el SQL vive en `store`.
+  - **`Reset` también limpia `sqlite_sequence`.** Es donde AUTOINCREMENT guarda
+    el último id entregado. Sin eso, volver a sembrar con la misma semilla da
+    los mismos datos pero con ids corridos, y los ids aparecen en las URLs.
+  - **Sin `--reset`, el seed se niega a correr** si la base tiene datos, en vez
+    de insertar encima. Correrlo dos veces sin querer duplicaría los 300 libros.
+  - **Dos rasgos ocultos por libro**, `quality` y `popularity`, que no se
+    persisten y solo sesgan la generación. Sin un sesgo por libro, todos los
+    promedios de puntaje convergerían a 3 y el top 10 de la §5.2 sería un empate
+    masivo resuelto por el desempate. `popularity` es exponencial y se eleva al
+    cuadrado, para que haya pocas superventas y una cola larga de libros
+    discretos: las ventas van de **801 a 797.208**.
+  - **Ventas decrecientes desde el año de publicación** (cae entre 45% y 75%
+    por año, con ruido), en vez de uniformes. Es lo que hace que la pregunta del
+    top 5 por año tenga sentido.
+  - **Ventana de publicación 1962–2020**, no 1900–2026. Los libros siguen
+    vendiendo 5–12 años después de publicarse, así que un año calendario
+    cualquiera tiene decenas de libros compitiendo y el "top 5 del año" es
+    selectivo de verdad: **109 de 300 libros (36%)** entran, ni todos ni casi
+    ninguno.
+  - **Reparto despareja de libros por autor** (primero uno a cada autor, el
+    resto por sorteo con pesos): la tabla de la §5.1 tiene autores de 1 libro y
+    autores de 17. Con reparto uniforme, ordenar por "N° de libros" no mostraría
+    nada.
+
+- **Verificación:**
+  - Requisitos del enunciado, sobre la base sembrada: 50 autores, 300 libros,
+    reseñas por libro entre 1 y 10 sin libros huérfanos, años de ventas por
+    libro entre 5 y 12, y **0 libros con `number_of_sales` distinto de
+    `SUM(sales_by_year.sales)`**. `PRAGMA foreign_key_check` sin violaciones y
+    0 reseñas con score fuera de 1–5.
+  - **Determinismo:** dos bases sembradas por separado con la semilla 42 dan el
+    mismo SHA-1 sobre el volcado ordenado de las 4 tablas
+    (`1f4f9b0d…`); con `-seed 7` el hash cambia.
+  - **Idempotencia:** `--reset` sobre una base ya sembrada reproduce ese mismo
+    hash, ids incluidos. Sin `--reset` sale con código 1, el mensaje
+    `la base ya tiene datos (50 autores, 300 libros, …); usa --reset` y deja las
+    300 filas intactas.
+  - App levantada contra los datos sembrados: los 4 listados y las páginas
+    profundas (`/authors?page=3`, `/books?page=15`) responden 200, sin un solo
+    `level=ERROR` en el log.

@@ -19,6 +19,10 @@ type Store struct {
 	Books   *BookStore
 	Reviews *ReviewStore
 	Sales   *SaleStore
+
+	// db lo usan las operaciones que abarcan todas las tablas a la vez
+	// (Count, Reset), que no pertenecen a ningún agregado en particular.
+	db *sql.DB
 }
 
 func New(db *sql.DB) *Store {
@@ -27,6 +31,7 @@ func New(db *sql.DB) *Store {
 		Books:   &BookStore{db: db},
 		Reviews: &ReviewStore{db: db},
 		Sales:   &SaleStore{db: db},
+		db:      db,
 	}
 }
 
