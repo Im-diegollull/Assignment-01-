@@ -93,5 +93,5 @@ La dependencia va en un solo sentido: `handlers → store → database`, con
 - [x] Fase 3 — CRUD de los 4 modelos
 - [x] Fase 4 — Seed de datos
 - [x] Fase 5 — Queries + vistas de tablas
-- [ ] Fase 6 — Búsqueda paginada
+- [x] Fase 6 — Búsqueda paginada
 - [ ] Fase 7 — Pulido

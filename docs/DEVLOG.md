@@ -488,3 +488,68 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
     0 fallas**, sin `level=ERROR` en el log. Incluye el intento de inyección por
     `?sort=`, la coexistencia de `/authors/stats` con `/authors/{id}`, y la
     comparación del flag del top 50 contra la verdad calculada en SQL (35 de 50).
+
+---
+
+## Fase 6 — Búsqueda paginada
+
+- **Tiempo aproximado:** 1h 30m
+
+- **Qué se hizo:**
+  - `internal/store/search.go`: `SearchTerms` (tokenización, función pura) y
+    `BookStore.Search` (dos consultas: `COUNT(*)` para el total y la página con
+    `LIMIT ? OFFSET ?`).
+  - `internal/handlers/search.go` y la ruta `GET /search`.
+  - `web/templates/pages/search.html` con el formulario, los resultados y tres
+    estados vacíos distintos.
+  - `internal/handlers/pagination.go`: refactor de la paginación, que ahora
+    aparece en 5 vistas.
+  - **27 tests nuevos** de tokenización, semántica OR, comodines y paginación.
+
+- **Semántica de la búsqueda:** el enunciado pide los libros cuyo resumen
+  contenga **cualquiera** de las palabras, así que se arma un `LIKE` por término
+  unidos con `OR`. Los placeholders se generan según la cantidad de términos;
+  los valores viajan siempre como argumentos, nunca concatenados.
+
+- **Problemas encontrados:**
+  1. **La paginación no sobrevivía a un query string previo.** El parcial armaba
+     el enlace como `{{.BaseURL}}?page=N`, que en `/search?q=archivo` habría
+     generado `/search?q=archivo?page=2`. Como la paginación pasó a estar en 5
+     vistas, se centralizó: el handler arma las URLs completas con
+     `url.Values.Encode()` y el parcial solo recibe `PrevURL` y `NextURL`.
+  2. **`%` y `_` son comodines de SQL, no texto.** Sin escaparlos, buscar `%`
+     traía los 300 libros: el patrón quedaba `'%%%'`. Se agregó `escapeLike`
+     junto con la cláusula `ESCAPE '\'` en la consulta. Hay tests para `%`, `%%`
+     y `__`.
+  3. **Una aserción del smoke test asumía el orden de los parámetros.**
+     Esperaba `q=archivo&page=2` y `url.Values.Encode()` ordena las claves
+     alfabéticamente, así que genera `page=2&q=archivo`. El enlace estaba bien;
+     el test estaba mal.
+
+- **Decisiones tomadas y alternativas descartadas:**
+  - **Sin términos no se consulta la base.** Un input vacío devuelve vacío en
+    vez de listar los 300 libros.
+  - **Se descartan las palabras de un solo carácter.** Con un comodín a cada
+    lado, `%a%` matchea casi todos los resúmenes y anula la utilidad del OR.
+  - **Tope de 10 términos.** Sin él, una consulta con 500 palabras genera 500
+    `LIKE` con comodín a ambos lados, cada uno un scan completo de la tabla.
+  - **Se muestran los términos efectivamente buscados**, porque no siempre
+    coinciden con lo escrito: se descartan los de un carácter, los repetidos y
+    lo que pase del tope.
+  - **Tres estados vacíos distintos**: no buscaste nada, buscaste algo que quedó
+    sin términos válidos, y buscaste bien pero no hubo resultados.
+  - **`LIKE` y no FTS5.** El enunciado lo permite como opcional y con 300 libros
+    la diferencia no se nota. **Limitación conocida:** el `LIKE` de SQLite solo
+    ignora mayúsculas en ASCII, así que "Árbol" no matchearía "árbol" (sí
+    funciona "Memoria" contra "memoria", que es ASCII). Resolverlo bien pedía
+    una columna normalizada o ICU, desproporcionado para esta escala.
+  - **Página de 10 resultados** en vez de 20: cada resultado muestra el resumen
+    completo y ocupa mucho más que una fila de tabla.
+
+- **Verificación:** `gofmt` sin salida, `go vet` limpio, suite completa en verde
+  con `-race`. Smoke test contra la base sembrada: **37 comprobaciones, 0
+  fallas**, sin `level=ERROR`. Los totales se comparan contra la verdad
+  calculada en SQL aparte: "naufragio" 31, "archivo" 97, la unión 119 (mayor que
+  cada parte, que es lo que prueba que el OR es OR). Incluye páginas fuera de
+  rango, `?page=-5` y `?page=abc`, el tope de 10 términos, y una regresión de la
+  paginación de los 4 listados tras el refactor.

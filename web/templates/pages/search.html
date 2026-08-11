@@ -1,0 +1,49 @@
+{{define "title"}}
+{{if .Query}}Búsqueda: {{.Query}}{{else}}Búsqueda de libros{{end}}
+{{end}}
+
+{{define "content"}}
+<h1>Búsqueda de libros</h1>
+<p class="lead">Busca por palabras del resumen. Trae los libros que contengan
+  <strong>cualquiera</strong> de las palabras, no necesariamente todas.</p>
+
+<form method="get" action="/search" class="search-form">
+  <input type="search" name="q" value="{{.Query}}" autofocus
+         placeholder="p. ej. naufragio memoria archivo"
+         aria-label="Palabras a buscar en el resumen">
+  <button type="submit" class="btn">Buscar</button>
+  {{if .Query}}<a class="btn btn-secondary" href="/search">Limpiar</a>{{end}}
+</form>
+
+{{if .Searched}}
+  <p class="hint">
+    Buscando {{len .Terms}} palabra{{if ne (len .Terms) 1}}s{{end}}:
+    {{range $i, $term := .Terms}}{{if $i}} {{end}}<span class="term">{{$term}}</span>{{end}}
+  </p>
+
+  {{if .Books}}
+    <ul class="results">
+      {{range .Books}}
+      <li class="result">
+        <h2><a href="/books/{{.ID}}">{{.Name}}</a></h2>
+        <p class="result-meta">
+          <a href="/authors/{{.AuthorID}}">{{.AuthorName}}</a>
+          {{if .PublicationDate}} · {{.PublicationDate}}{{end}}
+          · {{thousands .NumberOfSales}} ventas
+        </p>
+        <p class="result-summary">{{.Summary}}</p>
+      </li>
+      {{end}}
+    </ul>
+    {{template "pagination" .Pagination}}
+  {{else}}
+    <p class="empty">Ningún libro tiene esas palabras en su resumen.
+      Prueba con menos palabras o con otras.</p>
+  {{end}}
+{{else if .Query}}
+  <p class="empty">No hay nada que buscar en «{{.Query}}»: se descartan las
+    palabras de un solo carácter y los signos de puntuación.</p>
+{{else}}
+  <p class="empty">Escribe una o más palabras para buscar en los resúmenes.</p>
+{{end}}
+{{end}}

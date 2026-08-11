@@ -53,6 +53,7 @@ func (h *Handler) Routes() http.Handler {
 	// ServeMux elige siempre el más específico, sin importar el orden.
 	// Tablas de reporte. Van antes conceptualmente, pero el orden de registro
 	// no importa: ServeMux elige por especificidad, no por orden.
+	mux.HandleFunc("GET /search", h.search)
 	mux.HandleFunc("GET /authors/stats", h.authorStats)
 	mux.HandleFunc("GET /books/top-rated", h.topRatedBooks)
 	mux.HandleFunc("GET /books/top-selling", h.topSellingBooks)
@@ -155,8 +156,14 @@ func parseInt64(raw string) (int64, bool) {
 	return value, true
 }
 
-// pageParam lee ?page=N. Un valor ausente o inválido cae en la página 1.
+// pageParam devuelve la página pedida con el tamaño estándar de los listados.
 func pageParam(r *http.Request) store.Page {
+	return store.NewPage(pageNumber(r), store.DefaultPageSize)
+}
+
+// pageNumber lee ?page=N. Un valor ausente o inválido da 0, y NewPage lo
+// normaliza a la página 1.
+func pageNumber(r *http.Request) int {
 	number, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	return store.NewPage(number, store.DefaultPageSize)
+	return number
 }

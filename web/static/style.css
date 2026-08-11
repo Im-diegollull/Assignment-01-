@@ -6,8 +6,17 @@
   --border: #dfe3e8;
   --text: #1c2126;
   --muted: #626d78;
-  --accent: #2f5d8a;
-  --accent-soft: #eaf1f8;
+  /* El acento se usa para dos cosas que un amarillo único no puede cubrir:
+     texto sobre fondo claro (enlaces) y fondo de botones. Un amarillo vivo
+     como texto sobre blanco es ilegible, y con texto blanco encima lo es más
+     todavía. Por eso son tres tonos:
+       --accent        ámbar oscuro, para texto y bordes  (5.4:1 sobre blanco)
+       --accent-bright amarillo vivo, solo como fondo
+       --accent-ink    marrón casi negro, el texto que va sobre el amarillo */
+  --accent: #8a5f00;
+  --accent-bright: #ffc300;
+  --accent-ink: #241a00;
+  --accent-soft: #fff4d1;
   --danger: #a5312a;
   --danger-soft: #fbecea;
   --ok: #2c6e49;
@@ -57,7 +66,10 @@ body {
   letter-spacing: -0.02em;
 }
 
-.brand span { color: var(--accent); }
+/* El logo va con el amarillo fuerte. Es una marca, no texto de lectura: el
+   contraste sobre blanco es bajo, pero "Book" al lado va en el color del texto
+   y es lo que sostiene la legibilidad del conjunto. */
+.brand span { color: var(--accent-bright); }
 
 .topbar nav {
   display: flex;
@@ -85,7 +97,22 @@ h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
 
 .lead { color: var(--muted); margin-top: 0; }
 
-a { color: var(--accent); }
+/* Los enlaces no llevan el amarillo en el texto sino en el subrayado.
+   Un amarillo legible sobre blanco tiene que ser oscuro, y ahí deja de leerse
+   como amarillo: queda un ocre apagado. Así el nombre va en negro nítido
+   (16:1) y el amarillo aparece abajo, saturado y sin comprometer la lectura. */
+a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-bright);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-thickness: 3px;
+}
 
 code {
   font-family: var(--mono);
@@ -114,7 +141,7 @@ code {
 }
 
 a.card { text-decoration: none; color: inherit; display: block; }
-a.card:hover { border-color: var(--accent); }
+a.card:hover { border-color: var(--accent-bright); }
 
 /* ---------- Tablas ---------- */
 
@@ -173,20 +200,22 @@ input:focus, select:focus, textarea:focus {
 .btn {
   display: inline-block;
   padding: 0.45rem 0.9rem;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-bright);
   border-radius: var(--radius);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-bright);
+  color: var(--accent-ink);
   font: inherit;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
 
-.btn:hover { filter: brightness(1.1); }
+/* Oscurecer y no aclarar: subirle el brillo a un amarillo vivo lo lava. */
+.btn:hover { filter: brightness(0.94); }
 
 .btn-secondary {
   background: var(--surface);
+  border-color: var(--accent);
   color: var(--accent);
 }
 
@@ -425,8 +454,8 @@ th a.sortable.is-active { color: var(--accent); }
 .ranking-meta { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.88rem; }
 
 .score-badge {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-bright);
+  color: var(--accent-ink);
   font-weight: 700;
   border-radius: var(--radius);
   padding: 0.25rem 0.6rem;
@@ -457,3 +486,52 @@ th a.sortable.is-active { color: var(--accent); }
   font-weight: 600;
   color: var(--muted);
 }
+
+/* ---------- Búsqueda ---------- */
+
+.search-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.search-form input {
+  flex: 1;
+  min-width: 16rem;
+  font-size: 1rem;
+}
+
+.term {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+.results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+}
+
+.result h2 { margin: 0; font-size: 1.02rem; }
+.result h2 a { text-decoration: none; }
+.result-meta { margin: 0.15rem 0 0.45rem; color: var(--muted); font-size: 0.85rem; }
+.result-summary { margin: 0; }

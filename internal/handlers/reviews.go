@@ -9,9 +9,8 @@ import (
 )
 
 type reviewListPage struct {
-	Reviews []store.ReviewWithBook
-	Page    store.Page
-	BaseURL string
+	Reviews    []store.ReviewWithBook
+	Pagination pagination
 }
 
 type reviewShowPage struct {
@@ -32,7 +31,7 @@ func (h *Handler) reviewList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.render(w, http.StatusOK, "reviews_list.html", reviewListPage{
-		Reviews: reviews, Page: page, BaseURL: "/reviews",
+		Reviews: reviews, Pagination: newPagination("/reviews", r.URL.Query(), page),
 	})
 }
 

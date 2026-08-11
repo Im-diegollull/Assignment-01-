@@ -6,13 +6,9 @@
   </span>
   {{if gt .Page.TotalPages 1}}
   <span class="pagination-links">
-    {{if .Page.HasPrev}}
-      <a class="btn btn-secondary" href="{{.BaseURL}}?page={{.Page.PrevNumber}}">← Anterior</a>
-    {{end}}
+    {{if .PrevURL}}<a class="btn btn-secondary" href="{{.PrevURL}}">← Anterior</a>{{end}}
     <span class="pagination-current">Página {{.Page.Number}} de {{.Page.TotalPages}}</span>
-    {{if .Page.HasNext}}
-      <a class="btn btn-secondary" href="{{.BaseURL}}?page={{.Page.NextNumber}}">Siguiente →</a>
-    {{end}}
+    {{if .NextURL}}<a class="btn btn-secondary" href="{{.NextURL}}">Siguiente →</a>{{end}}
   </span>
   {{end}}
 </nav>

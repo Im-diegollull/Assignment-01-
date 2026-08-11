@@ -9,9 +9,8 @@ import (
 )
 
 type authorListPage struct {
-	Authors []models.Author
-	Page    store.Page
-	BaseURL string
+	Authors    []models.Author
+	Pagination pagination
 }
 
 type authorShowPage struct {
@@ -32,7 +31,7 @@ func (h *Handler) authorList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.render(w, http.StatusOK, "authors_list.html", authorListPage{
-		Authors: authors, Page: page, BaseURL: "/authors",
+		Authors: authors, Pagination: newPagination("/authors", r.URL.Query(), page),
 	})
 }
 

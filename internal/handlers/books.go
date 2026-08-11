@@ -9,9 +9,8 @@ import (
 )
 
 type bookListPage struct {
-	Books   []store.BookWithAuthor
-	Page    store.Page
-	BaseURL string
+	Books      []store.BookWithAuthor
+	Pagination pagination
 }
 
 type bookShowPage struct {
@@ -34,7 +33,7 @@ func (h *Handler) bookList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.render(w, http.StatusOK, "books_list.html", bookListPage{
-		Books: books, Page: page, BaseURL: "/books",
+		Books: books, Pagination: newPagination("/books", r.URL.Query(), page),
 	})
 }
 
