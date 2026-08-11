@@ -2,23 +2,29 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	"bookreviews/internal/database"
 	"bookreviews/internal/handlers"
 	"bookreviews/internal/web"
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "dirección HTTP de escucha")
+	var (
+		addr        = flag.String("addr", ":8080", "dirección HTTP de escucha")
+		dbPath      = flag.String("db", database.DefaultPath, "ruta del archivo SQLite")
+		migrateOnly = flag.Bool("migrate", false, "aplicar el esquema y salir, sin levantar el servidor")
+	)
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	if err := run(*addr, logger); err != nil {
+	if err := run(*addr, *dbPath, *migrateOnly, logger); err != nil {
 		logger.Error("el servidor terminó con error", "error", err)
 		os.Exit(1)
 	}
@@ -26,7 +32,26 @@ func main() {
 
 // run arma el grafo de dependencias y bloquea sirviendo. Está separado de main
 // para poder devolver error en vez de llamar a os.Exit desde varios puntos.
-func run(addr string, logger *slog.Logger) error {
+func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
+	ctx := context.Background()
+
+	db, err := database.Open(ctx, dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	logger.Info("base de datos abierta", "path", dbPath)
+
+	// El DDL es idempotente, así que se aplica siempre: una copia recién
+	// clonada del repo arranca sin pasos previos.
+	if err := database.Migrate(ctx, db); err != nil {
+		return err
+	}
+	if migrateOnly {
+		logger.Info("esquema aplicado, saliendo por -migrate")
+		return nil
+	}
+
 	handler, err := handlers.New(logger)
 	if err != nil {
 		return err

@@ -24,9 +24,23 @@ go version   # >= 1.22
 ```bash
 go run ./cmd/server              # escucha en :8080
 go run ./cmd/server -addr :3000  # otro puerto
+go run ./cmd/server -db /tmp/x.db
 ```
 
 Luego abrir http://localhost:8080
+
+La base vive en `data/app.db` y el esquema se aplica solo al arrancar, así que
+no hay pasos previos. Para aplicarlo sin levantar el servidor:
+
+```bash
+go run ./cmd/server -migrate
+```
+
+Para empezar de cero, basta con borrar el archivo:
+
+```bash
+rm -f data/app.db data/app.db-wal data/app.db-shm
+```
 
 ## Comandos de desarrollo
 
@@ -58,7 +72,7 @@ La dependencia va en un solo sentido: `handlers → store → database`, con
 ## Estado
 
 - [x] Fase 1 — Scaffolding
-- [ ] Fase 2 — Base de datos
+- [x] Fase 2 — Base de datos
 - [ ] Fase 3 — CRUD de los 4 modelos
 - [ ] Fase 4 — Seed de datos
 - [ ] Fase 5 — Queries + vistas de tablas
