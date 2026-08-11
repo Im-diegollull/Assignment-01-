@@ -1,0 +1,27 @@
+{{define "title"}}Reseña de {{.Review.BookName}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/reviews">← Reseñas</a></p>
+
+<div class="page-head">
+  <h1>Reseña</h1>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/reviews/{{.Review.ID}}/edit">Editar</a>
+    <form method="post" action="/reviews/{{.Review.ID}}/delete"
+          onsubmit="return confirm('¿Borrar esta reseña?');">
+      <button type="submit" class="btn btn-danger">Borrar</button>
+    </form>
+  </div>
+</div>
+
+<dl class="detail">
+  <dt>Libro</dt>
+  <dd><a href="/books/{{.Review.BookID}}">{{.Review.BookName}}</a></dd>
+  <dt>Puntaje</dt>
+  <dd>{{.Review.Score}} de 5</dd>
+  <dt>Up-votes</dt>
+  <dd>{{.Review.Upvotes}}</dd>
+  <dt>Texto</dt>
+  <dd>{{.Review.Text}}</dd>
+</dl>
+{{end}}

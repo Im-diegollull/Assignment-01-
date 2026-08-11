@@ -1,0 +1,51 @@
+{{define "title"}}{{if .IsEdit}}Editar ventas{{else}}Nuevas ventas{{end}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/sales">← Ventas por año</a></p>
+
+<h1>{{if .IsEdit}}Editar ventas{{else}}Nuevas ventas{{end}}</h1>
+
+{{if .Errors}}
+<p class="alert">Revisa los campos marcados.</p>
+{{end}}
+
+{{if .Books}}
+<form method="post"
+      action="{{if .IsEdit}}/sales/{{.Sale.ID}}/edit{{else}}/sales{{end}}"
+      class="form">
+  <div class="field">
+    <label for="BookID">Libro</label>
+    <select id="BookID" name="BookID" required>
+      <option value="">— Selecciona un libro —</option>
+      {{$selected := .Sale.BookID}}
+      {{range .Books}}
+      <option value="{{.ID}}" {{if eq .ID $selected}}selected{{end}}>{{.String}}</option>
+      {{end}}
+    </select>
+    {{template "fieldError" .Errors.BookID}}
+  </div>
+
+  <div class="field">
+    <label for="Year">Año</label>
+    <input type="number" id="Year" name="Year" value="{{.Sale.Year}}" required>
+    <p class="hint">Un libro solo puede tener un registro por año.</p>
+    {{template "fieldError" .Errors.Year}}
+  </div>
+
+  <div class="field">
+    <label for="Sales">Ventas</label>
+    <input type="number" id="Sales" name="Sales" value="{{.Sale.Sales}}" min="0" required>
+    {{template "fieldError" .Errors.Sales}}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{{if .IsEdit}}Guardar cambios{{else}}Crear registro{{end}}</button>
+    <a class="btn btn-secondary"
+       href="{{if .IsEdit}}/sales/{{.Sale.ID}}{{else}}/sales{{end}}">Cancelar</a>
+  </div>
+</form>
+{{else}}
+<p class="empty">Primero tienes que crear un libro.
+  <a href="/books/new">Crear libro</a>.</p>
+{{end}}
+{{end}}

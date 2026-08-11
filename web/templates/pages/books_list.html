@@ -1,0 +1,49 @@
+{{define "title"}}Libros{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Libros</h1>
+    <p class="lead">CRUD de libros. Ver también
+      <a href="/books/top-rated">top 10 mejor evaluados</a> y
+      <a href="/books/top-selling">top 50 más vendidos</a>.</p>
+  </div>
+  <a class="btn" href="/books/new">Nuevo libro</a>
+</div>
+
+{{if .Books}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Autor</th>
+        <th>Publicación</th>
+        <th class="num">Ventas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Books}}
+      <tr>
+        <td><a href="/books/{{.ID}}">{{.Name}}</a></td>
+        <td><a href="/authors/{{.AuthorID}}">{{.AuthorName}}</a></td>
+        <td>{{if .PublicationDate}}{{.PublicationDate}}{{else}}—{{end}}</td>
+        <td class="num">{{.NumberOfSales}}</td>
+        <td class="actions">
+          <a href="/books/{{.ID}}/edit">Editar</a>
+          <form method="post" action="/books/{{.ID}}/delete"
+                onsubmit="return confirm('¿Borrar «{{.Name}}»? Se borrarán también sus reseñas y ventas.');">
+            <button type="submit" class="link-danger">Borrar</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{template "pagination" .}}
+{{else}}
+<p class="empty">Todavía no hay libros. <a href="/books/new">Crea el primero</a>.</p>
+{{end}}
+{{end}}

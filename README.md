@@ -73,7 +73,7 @@ La dependencia va en un solo sentido: `handlers → store → database`, con
 
 - [x] Fase 1 — Scaffolding
 - [x] Fase 2 — Base de datos
-- [ ] Fase 3 — CRUD de los 4 modelos
+- [x] Fase 3 — CRUD de los 4 modelos
 - [ ] Fase 4 — Seed de datos
 - [ ] Fase 5 — Queries + vistas de tablas
 - [ ] Fase 6 — Búsqueda paginada

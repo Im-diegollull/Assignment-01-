@@ -1,0 +1,65 @@
+{{define "title"}}{{if .IsEdit}}Editar libro{{else}}Nuevo libro{{end}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/books">← Libros</a></p>
+
+<h1>{{if .IsEdit}}Editar libro{{else}}Nuevo libro{{end}}</h1>
+
+{{if .Errors}}
+<p class="alert">Revisa los campos marcados.</p>
+{{end}}
+
+{{if .Authors}}
+<form method="post"
+      action="{{if .IsEdit}}/books/{{.Book.ID}}/edit{{else}}/books{{end}}"
+      class="form">
+  <div class="field">
+    <label for="Name">Nombre</label>
+    <input type="text" id="Name" name="Name" value="{{.Book.Name}}" required>
+    {{template "fieldError" .Errors.Name}}
+  </div>
+
+  <div class="field">
+    <label for="AuthorID">Autor</label>
+    <select id="AuthorID" name="AuthorID" required>
+      <option value="">— Selecciona un autor —</option>
+      {{$selected := .Book.AuthorID}}
+      {{range .Authors}}
+      <option value="{{.ID}}" {{if eq .ID $selected}}selected{{end}}>{{.Name}}</option>
+      {{end}}
+    </select>
+    {{template "fieldError" .Errors.AuthorID}}
+  </div>
+
+  <div class="field">
+    <label for="PublicationDate">Fecha de publicación</label>
+    <input type="date" id="PublicationDate" name="PublicationDate"
+           value="{{.Book.PublicationDate}}" required>
+    {{template "fieldError" .Errors.PublicationDate}}
+  </div>
+
+  <div class="field">
+    <label for="NumberOfSales">Número de ventas</label>
+    <input type="number" id="NumberOfSales" name="NumberOfSales"
+           value="{{.Book.NumberOfSales}}" min="0">
+    <p class="hint">Se recalcula automáticamente al cargar ventas por año.</p>
+    {{template "fieldError" .Errors.NumberOfSales}}
+  </div>
+
+  <div class="field">
+    <label for="Summary">Resumen</label>
+    <textarea id="Summary" name="Summary" rows="6">{{.Book.Summary}}</textarea>
+    {{template "fieldError" .Errors.Summary}}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{{if .IsEdit}}Guardar cambios{{else}}Crear libro{{end}}</button>
+    <a class="btn btn-secondary"
+       href="{{if .IsEdit}}/books/{{.Book.ID}}{{else}}/books{{end}}">Cancelar</a>
+  </div>
+</form>
+{{else}}
+<p class="empty">Primero tienes que crear un autor:
+  un libro no puede existir sin él. <a href="/authors/new">Crear autor</a>.</p>
+{{end}}
+{{end}}

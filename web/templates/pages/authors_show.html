@@ -1,0 +1,51 @@
+{{define "title"}}{{.Author.Name}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/authors">← Autores</a></p>
+
+<div class="page-head">
+  <h1>{{.Author.Name}}</h1>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/authors/{{.Author.ID}}/edit">Editar</a>
+    <form method="post" action="/authors/{{.Author.ID}}/delete"
+          onsubmit="return confirm('¿Borrar a {{.Author.Name}}? Se borrarán también sus libros, reseñas y ventas.');">
+      <button type="submit" class="btn btn-danger">Borrar</button>
+    </form>
+  </div>
+</div>
+
+<dl class="detail">
+  <dt>Fecha de nacimiento</dt>
+  <dd>{{if .Author.DateOfBirth}}{{.Author.DateOfBirth}}{{else}}—{{end}}</dd>
+  <dt>País de origen</dt>
+  <dd>{{if .Author.CountryOfOrigin}}{{.Author.CountryOfOrigin}}{{else}}—{{end}}</dd>
+  <dt>Descripción</dt>
+  <dd>{{if .Author.Description}}{{.Author.Description}}{{else}}—{{end}}</dd>
+</dl>
+
+<h2>Libros publicados</h2>
+{{if .Books}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Publicación</th>
+        <th class="num">Ventas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Books}}
+      <tr>
+        <td><a href="/books/{{.ID}}">{{.Name}}</a></td>
+        <td>{{if .PublicationDate}}{{.PublicationDate}}{{else}}—{{end}}</td>
+        <td class="num">{{.NumberOfSales}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+<p class="empty">Este autor no tiene libros cargados.</p>
+{{end}}
+{{end}}

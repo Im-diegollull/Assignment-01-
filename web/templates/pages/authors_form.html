@@ -1,0 +1,45 @@
+{{define "title"}}{{if .IsEdit}}Editar autor{{else}}Nuevo autor{{end}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/authors">← Autores</a></p>
+
+<h1>{{if .IsEdit}}Editar autor{{else}}Nuevo autor{{end}}</h1>
+
+{{if .Errors}}
+<p class="alert">Revisa los campos marcados.</p>
+{{end}}
+
+<form method="post"
+      action="{{if .IsEdit}}/authors/{{.Author.ID}}/edit{{else}}/authors{{end}}"
+      class="form">
+  <div class="field">
+    <label for="Name">Nombre</label>
+    <input type="text" id="Name" name="Name" value="{{.Author.Name}}" required>
+    {{template "fieldError" .Errors.Name}}
+  </div>
+
+  <div class="field">
+    <label for="DateOfBirth">Fecha de nacimiento</label>
+    <input type="date" id="DateOfBirth" name="DateOfBirth" value="{{.Author.DateOfBirth}}">
+    {{template "fieldError" .Errors.DateOfBirth}}
+  </div>
+
+  <div class="field">
+    <label for="CountryOfOrigin">País de origen</label>
+    <input type="text" id="CountryOfOrigin" name="CountryOfOrigin" value="{{.Author.CountryOfOrigin}}">
+    {{template "fieldError" .Errors.CountryOfOrigin}}
+  </div>
+
+  <div class="field">
+    <label for="Description">Descripción</label>
+    <textarea id="Description" name="Description" rows="5">{{.Author.Description}}</textarea>
+    {{template "fieldError" .Errors.Description}}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{{if .IsEdit}}Guardar cambios{{else}}Crear autor{{end}}</button>
+    <a class="btn btn-secondary"
+       href="{{if .IsEdit}}/authors/{{.Author.ID}}{{else}}/authors{{end}}">Cancelar</a>
+  </div>
+</form>
+{{end}}

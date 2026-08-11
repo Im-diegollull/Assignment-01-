@@ -1,0 +1,46 @@
+{{define "title"}}Autores{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Autores</h1>
+    <p class="lead">CRUD de autores. Para la tabla con métricas, ver
+      <a href="/authors/stats">tabla de autores</a>.</p>
+  </div>
+  <a class="btn" href="/authors/new">Nuevo autor</a>
+</div>
+
+{{if .Authors}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Nacimiento</th>
+        <th>País</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Authors}}
+      <tr>
+        <td><a href="/authors/{{.ID}}">{{.Name}}</a></td>
+        <td>{{if .DateOfBirth}}{{.DateOfBirth}}{{else}}—{{end}}</td>
+        <td>{{if .CountryOfOrigin}}{{.CountryOfOrigin}}{{else}}—{{end}}</td>
+        <td class="actions">
+          <a href="/authors/{{.ID}}/edit">Editar</a>
+          <form method="post" action="/authors/{{.ID}}/delete"
+                onsubmit="return confirm('¿Borrar a {{.Name}}? Se borrarán también sus libros, reseñas y ventas.');">
+            <button type="submit" class="link-danger">Borrar</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{template "pagination" .}}
+{{else}}
+<p class="empty">Todavía no hay autores. <a href="/authors/new">Crea el primero</a>.</p>
+{{end}}
+{{end}}

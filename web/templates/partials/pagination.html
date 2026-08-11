@@ -1,0 +1,20 @@
+{{define "pagination"}}
+{{if gt .Page.Total 0}}
+<nav class="pagination">
+  <span class="pagination-info">
+    Mostrando {{.Page.From}}–{{.Page.To}} de {{.Page.Total}}
+  </span>
+  {{if gt .Page.TotalPages 1}}
+  <span class="pagination-links">
+    {{if .Page.HasPrev}}
+      <a class="btn btn-secondary" href="{{.BaseURL}}?page={{.Page.PrevNumber}}">← Anterior</a>
+    {{end}}
+    <span class="pagination-current">Página {{.Page.Number}} de {{.Page.TotalPages}}</span>
+    {{if .Page.HasNext}}
+      <a class="btn btn-secondary" href="{{.BaseURL}}?page={{.Page.NextNumber}}">Siguiente →</a>
+    {{end}}
+  </span>
+  {{end}}
+</nav>
+{{end}}
+{{end}}

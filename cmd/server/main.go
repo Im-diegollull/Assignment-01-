@@ -11,6 +11,7 @@ import (
 
 	"bookreviews/internal/database"
 	"bookreviews/internal/handlers"
+	"bookreviews/internal/store"
 	"bookreviews/internal/web"
 )
 
@@ -52,7 +53,7 @@ func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
 		return nil
 	}
 
-	handler, err := handlers.New(logger)
+	handler, err := handlers.New(logger, store.New(db))
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,45 @@
+{{define "title"}}Ventas por año{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Ventas por año</h1>
+    <p class="lead">Ventas de cada libro desglosadas por año calendario.</p>
+  </div>
+  <a class="btn" href="/sales/new">Nueva venta</a>
+</div>
+
+{{if .Sales}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Libro</th>
+        <th>Año</th>
+        <th class="num">Ventas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Sales}}
+      <tr>
+        <td><a href="/books/{{.BookID}}">{{.BookName}}</a></td>
+        <td><a href="/sales/{{.ID}}">{{.Year}}</a></td>
+        <td class="num">{{.Sales}}</td>
+        <td class="actions">
+          <a href="/sales/{{.ID}}/edit">Editar</a>
+          <form method="post" action="/sales/{{.ID}}/delete"
+                onsubmit="return confirm('¿Borrar las ventas {{.Year}} de «{{.BookName}}»?');">
+            <button type="submit" class="link-danger">Borrar</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{template "pagination" .}}
+{{else}}
+<p class="empty">Todavía no hay ventas cargadas. <a href="/sales/new">Carga la primera</a>.</p>
+{{end}}
+{{end}}

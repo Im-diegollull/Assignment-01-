@@ -169,3 +169,101 @@ Stack asignado: **Go** + **`net/http`** (stdlib) + **SQLite** + **sin ORM**
   existen, `PRAGMA journal_mode` devuelve `wal`,
   `PRAGMA foreign_key_list(books)` muestra la FK a `authors` con `CASCADE` en
   delete, y `PRAGMA foreign_key_check` no reporta violaciones.
+
+---
+
+## Fase 3 — CRUD de los 4 modelos
+
+- **Tiempo aproximado:** 3h 30m
+
+- **Qué se hizo:**
+  - `internal/models`: `Author`, `Book`, `Review`, `Sale`, cada uno con
+    `Validate() Errors`, más `validation.go` con los chequeos compartidos
+    (obligatorio, largo máximo, fecha ISO, año razonable, no negativo).
+  - `internal/store`: un sub-store por agregado con `List/Get/Create/Update/Delete`,
+    el sentinel `ErrNotFound`, el helper `inTx` para las operaciones
+    multi-tabla y `Page` para la paginación de los listados.
+  - `internal/handlers`: 28 rutas (7 por recurso), el helper `form` para parsear
+    POST y acumular errores, y `render` con re-dibujo del formulario ante datos
+    inválidos.
+  - 11 plantillas nuevas: list/show/form por recurso más los parciales
+    `pagination` y `fieldError`.
+  - 9 tests de store nuevos, incluyendo los del recálculo de ventas.
+
+- **CRUD y vistas:** los 4 modelos tienen list, show, new, edit y delete. Los
+  listados paginan de a 20 con `?page=N`. La ficha del autor lista sus libros; la
+  del libro lista sus reseñas y sus ventas por año, con accesos directos a
+  `/reviews/new?book_id=N` y `/sales/new?book_id=N`.
+
+- **Problemas encontrados:**
+  1. **Un campo homónimo del struct queda tapado al embeber.** `models.Review`
+     tenía un campo `Review string`, y el view model `ReviewWithBook` embebe
+     `models.Review`. En ese caso `r.Review` resuelve al struct embebido y no al
+     texto, así que `rows.Scan(&r.Review, ...)` compilaba pero fallaba en
+     runtime con:
+     ```
+     sql: Scan error on column index 2, name "COALESCE(r.review, '')":
+     unsupported Scan, storing driver.Value type string into type *models.Review
+     ```
+     Se renombró el campo a `Text` (la columna sigue llamándose `review`).
+  2. **Un proceso viejo del servidor secuestró el puerto de prueba.** La primera
+     corrida del smoke test dio 404 en las 28 rutas nuevas mientras que `/`
+     respondía 200: un binario de la Fase 2, huérfano de una prueba anterior,
+     seguía escuchando en `:8099`. Como `curl` devuelve exit 0 igual ante un 404,
+     el bucle de espera lo dio por bueno. Se verificó con
+     `lsof -nP -iTCP:8123 -sTCP:LISTEN` que el PID que escucha es el del binario
+     recién compilado.
+  3. **`http.Values` no existe**; el tipo es `url.Values`, de `net/url`.
+  4. Un autocorrector del editor convirtió `''` en comillas tipográficas dentro
+     de un comentario de `author.go`. Ahí era inocuo, pero el mismo reemplazo
+     dentro de una cadena SQL habría roto la query en silencio. Se revisó todo
+     el repo con `grep -rn $'[‘’“”]' --include=*.go --include=*.sql`.
+
+- **Decisiones tomadas y alternativas descartadas:**
+  - **Los inputs del HTML se llaman igual que el campo del struct**
+    (`name="NumberOfSales"`, no `name="number_of_sales"`). Así la clave del
+    input, la del mapa de errores y el nombre del campo son la misma cadena y no
+    hace falta una tabla de traducción entre las tres. Es menos idiomático en
+    HTML y es lo que se paga a cambio.
+  - **Un `map[string]string` de errores por campo** en vez de una lista de
+    mensajes: la plantilla necesita poner el error debajo de su input.
+  - **Los errores de parseo le ganan a los de validación** cuando caen en el
+    mismo campo. Si el usuario escribe "abc" donde va un número, el valor llega
+    como 0 y el dominio diría "no puede ser negativo", que es un mensaje
+    engañoso; el de parseo describe el problema real.
+  - **Los formularios inválidos responden 422** (Unprocessable Entity) y
+    re-renderizan con lo ya escrito, en vez de redirigir y perder los datos.
+    Los POST exitosos responden **303 See Other**, para que recargar la página
+    siguiente no reenvíe el formulario.
+  - **`ErrNotFound` como sentinel del store**, traducido a 404 solo en el
+    handler con `errors.Is`. `store` no conoce códigos HTTP. `UPDATE` y `DELETE`
+    sobre un id inexistente devuelven `ErrNotFound` mirando `RowsAffected`, para
+    que se comporten igual que un `Get` fallido.
+  - **Un id no numérico en la URL es 404 y no 400**: `/authors/abc` simplemente
+    no corresponde a ningún recurso.
+  - **El recálculo de `number_of_sales` corre dentro de la transacción** que
+    modifica `sales_by_year`, no después. Si la venta se mueve de un libro a
+    otro se recalculan **los dos**: recalcular solo el destino dejaría al libro
+    de origen contando ventas que ya no le pertenecen.
+  - **El año duplicado se detecta con un `SELECT` previo dentro de la
+    transacción**, no interpretando el mensaje del `UNIQUE`. Evita acoplar el
+    store al texto de error del driver y permite devolver un mensaje por campo.
+    El `UNIQUE` del esquema queda como red de seguridad.
+  - **`ORDER BY name COLLATE NOCASE`** en los listados: sin eso SQLite ordena
+    por bytes y manda todas las mayúsculas antes que las minúsculas.
+  - **JS solo en los `confirm()` de borrado.** Es el único JavaScript del
+    proyecto. La alternativa sin JS era una página intermedia de confirmación
+    por cada recurso: 4 rutas y 4 plantillas más para el mismo resultado.
+  - Se **descartó** un handler CRUD genérico por reflexión para los 4 recursos.
+    La duplicación entre `authors.go` y `books.go` es real pero honesta, y cada
+    recurso terminó necesitando algo propio (el `<select>` de autores, la
+    preselección por `?book_id=`, el error de año duplicado).
+
+- **Verificación:** `gofmt -l .` sin salida, `go vet ./...` limpio, 15 tests
+  en verde (6 de `database`, 9 de `store`). Smoke test de extremo a extremo
+  contra el servidor real, sobre una base temporal: **39 comprobaciones, 0
+  fallas**, sin un solo `level=ERROR` en el log. Cubre los 4 listados, alta,
+  edición y borrado, los 404, la validación con re-render conservando lo
+  escrito, la paginación (25 autores → 20 + 5, "21–25 de 25"), el rechazo del
+  año duplicado y el recálculo del total del libro en las cuatro situaciones
+  (dos altas → 3800, edición → 2800, borrado → 500, rechazo → sin cambios).

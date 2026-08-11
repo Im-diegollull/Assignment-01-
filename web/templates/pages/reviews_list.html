@@ -1,0 +1,47 @@
+{{define "title"}}Reseñas{{end}}
+
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Reseñas</h1>
+    <p class="lead">CRUD de reseñas, con puntaje de 1 a 5.</p>
+  </div>
+  <a class="btn" href="/reviews/new">Nueva reseña</a>
+</div>
+
+{{if .Reviews}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Libro</th>
+        <th>Reseña</th>
+        <th class="num">Puntaje</th>
+        <th class="num">Up-votes</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Reviews}}
+      <tr>
+        <td><a href="/books/{{.BookID}}">{{.BookName}}</a></td>
+        <td><a href="/reviews/{{.ID}}">{{.Text}}</a></td>
+        <td class="num">{{.Score}}</td>
+        <td class="num">{{.Upvotes}}</td>
+        <td class="actions">
+          <a href="/reviews/{{.ID}}/edit">Editar</a>
+          <form method="post" action="/reviews/{{.ID}}/delete"
+                onsubmit="return confirm('¿Borrar esta reseña?');">
+            <button type="submit" class="link-danger">Borrar</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{template "pagination" .}}
+{{else}}
+<p class="empty">Todavía no hay reseñas. <a href="/reviews/new">Crea la primera</a>.</p>
+{{end}}
+{{end}}

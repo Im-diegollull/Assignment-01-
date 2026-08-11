@@ -1,0 +1,89 @@
+{{define "title"}}{{.Book.Name}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/books">← Libros</a></p>
+
+<div class="page-head">
+  <h1>{{.Book.Name}}</h1>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/books/{{.Book.ID}}/edit">Editar</a>
+    <form method="post" action="/books/{{.Book.ID}}/delete"
+          onsubmit="return confirm('¿Borrar «{{.Book.Name}}»? Se borrarán también sus reseñas y ventas.');">
+      <button type="submit" class="btn btn-danger">Borrar</button>
+    </form>
+  </div>
+</div>
+
+<dl class="detail">
+  <dt>Autor</dt>
+  <dd><a href="/authors/{{.Book.AuthorID}}">{{.Book.AuthorName}}</a></dd>
+  <dt>Fecha de publicación</dt>
+  <dd>{{if .Book.PublicationDate}}{{.Book.PublicationDate}}{{else}}—{{end}}</dd>
+  <dt>Ventas totales</dt>
+  <dd>{{.Book.NumberOfSales}}</dd>
+  <dt>Resumen</dt>
+  <dd>{{if .Book.Summary}}{{.Book.Summary}}{{else}}—{{end}}</dd>
+</dl>
+
+<div class="page-head">
+  <h2>Reseñas</h2>
+  <a class="btn btn-secondary" href="/reviews/new?book_id={{.Book.ID}}">Agregar reseña</a>
+</div>
+{{if .Reviews}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="num">Puntaje</th>
+        <th>Reseña</th>
+        <th class="num">Up-votes</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Reviews}}
+      <tr>
+        <td class="num">{{.Score}}</td>
+        <td><a href="/reviews/{{.ID}}">{{.Text}}</a></td>
+        <td class="num">{{.Upvotes}}</td>
+        <td class="actions"><a href="/reviews/{{.ID}}/edit">Editar</a></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+<p class="empty">Este libro todavía no tiene reseñas.</p>
+{{end}}
+
+<div class="page-head">
+  <h2>Ventas por año</h2>
+  <a class="btn btn-secondary" href="/sales/new?book_id={{.Book.ID}}">Agregar año</a>
+</div>
+{{if .Sales}}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Año</th>
+        <th class="num">Ventas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Sales}}
+      <tr>
+        <td><a href="/sales/{{.ID}}">{{.Year}}</a></td>
+        <td class="num">{{.Sales}}</td>
+        <td class="actions"><a href="/sales/{{.ID}}/edit">Editar</a></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+<p class="hint">El total del libro ({{.Book.NumberOfSales}}) se recalcula desde
+  esta tabla cada vez que se agrega, edita o borra un año.</p>
+{{else}}
+<p class="empty">Este libro todavía no tiene ventas por año cargadas.</p>
+{{end}}
+{{end}}

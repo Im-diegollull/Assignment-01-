@@ -224,3 +224,112 @@ input:focus, select:focus, textarea:focus {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+/* ---------- Encabezado de página y navegación ---------- */
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.page-head h1, .page-head h2 { margin-top: 0; }
+
+.breadcrumb { margin: 0 0 0.5rem; font-size: 0.9rem; }
+.breadcrumb a { text-decoration: none; color: var(--muted); }
+.breadcrumb a:hover { color: var(--accent); }
+
+.hint { color: var(--muted); font-size: 0.85rem; margin: 0.3rem 0 0; }
+
+/* ---------- Acciones en fila ---------- */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+.actions form { display: inline; margin: 0; }
+
+.link-danger {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--danger);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---------- Ficha de detalle ---------- */
+
+.detail {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 0.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  margin: 0 0 1.5rem;
+}
+
+.detail dt { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+.detail dd { margin: 0; }
+
+/* ---------- Formularios ---------- */
+
+.form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  max-width: 640px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0.3rem 0 0;
+}
+
+.alert {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  max-width: 640px;
+}
+
+/* ---------- Paginación ---------- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.pagination-info { color: var(--muted); font-size: 0.9rem; }
+
+.pagination-links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pagination-current { color: var(--muted); font-size: 0.9rem; }

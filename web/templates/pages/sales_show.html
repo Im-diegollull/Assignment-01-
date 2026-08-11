@@ -1,0 +1,25 @@
+{{define "title"}}Ventas {{.Sale.Year}} — {{.Sale.BookName}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/sales">← Ventas por año</a></p>
+
+<div class="page-head">
+  <h1>Ventas {{.Sale.Year}}</h1>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/sales/{{.Sale.ID}}/edit">Editar</a>
+    <form method="post" action="/sales/{{.Sale.ID}}/delete"
+          onsubmit="return confirm('¿Borrar este registro de ventas?');">
+      <button type="submit" class="btn btn-danger">Borrar</button>
+    </form>
+  </div>
+</div>
+
+<dl class="detail">
+  <dt>Libro</dt>
+  <dd><a href="/books/{{.Sale.BookID}}">{{.Sale.BookName}}</a></dd>
+  <dt>Año</dt>
+  <dd>{{.Sale.Year}}</dd>
+  <dt>Ventas</dt>
+  <dd>{{.Sale.Sales}}</dd>
+</dl>
+{{end}}

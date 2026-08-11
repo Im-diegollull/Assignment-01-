@@ -1,0 +1,57 @@
+{{define "title"}}{{if .IsEdit}}Editar reseña{{else}}Nueva reseña{{end}}{{end}}
+
+{{define "content"}}
+<p class="breadcrumb"><a href="/reviews">← Reseñas</a></p>
+
+<h1>{{if .IsEdit}}Editar reseña{{else}}Nueva reseña{{end}}</h1>
+
+{{if .Errors}}
+<p class="alert">Revisa los campos marcados.</p>
+{{end}}
+
+{{if .Books}}
+<form method="post"
+      action="{{if .IsEdit}}/reviews/{{.Review.ID}}/edit{{else}}/reviews{{end}}"
+      class="form">
+  <div class="field">
+    <label for="BookID">Libro</label>
+    <select id="BookID" name="BookID" required>
+      <option value="">— Selecciona un libro —</option>
+      {{$selected := .Review.BookID}}
+      {{range .Books}}
+      <option value="{{.ID}}" {{if eq .ID $selected}}selected{{end}}>{{.String}}</option>
+      {{end}}
+    </select>
+    {{template "fieldError" .Errors.BookID}}
+  </div>
+
+  <div class="field">
+    <label for="Score">Puntaje (1 a 5)</label>
+    <input type="number" id="Score" name="Score" value="{{.Review.Score}}"
+           min="1" max="5" required>
+    {{template "fieldError" .Errors.Score}}
+  </div>
+
+  <div class="field">
+    <label for="Upvotes">Up-votes</label>
+    <input type="number" id="Upvotes" name="Upvotes" value="{{.Review.Upvotes}}" min="0">
+    {{template "fieldError" .Errors.Upvotes}}
+  </div>
+
+  <div class="field">
+    <label for="Text">Reseña</label>
+    <textarea id="Text" name="Text" rows="6" required>{{.Review.Text}}</textarea>
+    {{template "fieldError" .Errors.Text}}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{{if .IsEdit}}Guardar cambios{{else}}Crear reseña{{end}}</button>
+    <a class="btn btn-secondary"
+       href="{{if .IsEdit}}/reviews/{{.Review.ID}}{{else}}/reviews{{end}}">Cancelar</a>
+  </div>
+</form>
+{{else}}
+<p class="empty">Primero tienes que crear un libro.
+  <a href="/books/new">Crear libro</a>.</p>
+{{end}}
+{{end}}
