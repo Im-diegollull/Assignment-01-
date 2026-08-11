@@ -1,2 +1,66 @@
-# Assignment-01-
-app web de reseñas de libros (Go net/http + SQLite), Grupo 3
+# Book Review Web App — Grupo 3
+
+App web de reseñas de libros. Arquitectura de Software, Universidad de los Andes.
+
+| Ítem | Valor |
+|---|---|
+| Lenguaje | Go 1.22+ (desarrollado con 1.26.5) |
+| Web | `net/http` de la stdlib — sin framework externo |
+| Base de datos | SQLite |
+| ORM | Ninguno: `database/sql` + SQL escrito a mano |
+| Frontend | `html/template` server-rendered + CSS plano |
+
+## Requisitos
+
+Solo Go. El driver de SQLite es puro Go, así que no hace falta CGO ni un
+toolchain de C.
+
+```bash
+go version   # >= 1.22
+```
+
+## Correr la app
+
+```bash
+go run ./cmd/server              # escucha en :8080
+go run ./cmd/server -addr :3000  # otro puerto
+```
+
+Luego abrir http://localhost:8080
+
+## Comandos de desarrollo
+
+```bash
+gofmt -l .        # no debe imprimir nada
+go vet ./...      # debe salir limpio
+go build ./...
+go test ./...
+```
+
+## Estructura
+
+```
+cmd/server/       arranque del servidor HTTP
+cmd/seed/         generador de datos de prueba
+internal/database conexión SQLite + schema.sql
+internal/models   structs de dominio y su validación
+internal/store    acceso a datos (todo el SQL vive acá)
+internal/handlers capa HTTP: parseo, validación y render
+internal/web      middleware genérico
+web/templates     layout, parciales y páginas
+web/static        CSS
+docs/DEVLOG.md    bitácora de desarrollo
+```
+
+La dependencia va en un solo sentido: `handlers → store → database`, con
+`models` en la base. No hay SQL en `handlers` ni `net/http` en `store`.
+
+## Estado
+
+- [x] Fase 1 — Scaffolding
+- [ ] Fase 2 — Base de datos
+- [ ] Fase 3 — CRUD de los 4 modelos
+- [ ] Fase 4 — Seed de datos
+- [ ] Fase 5 — Queries + vistas de tablas
+- [ ] Fase 6 — Búsqueda paginada
+- [ ] Fase 7 — Pulido

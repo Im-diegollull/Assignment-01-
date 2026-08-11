@@ -1,0 +1,19 @@
+{{define "base"}}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{block "title" .}}Book Reviews{{end}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  {{template "nav" .}}
+  <main class="container">
+    {{block "content" .}}{{end}}
+  </main>
+  <footer class="container footer">
+    Arquitectura de Software — Grupo 3 · Go <code>net/http</code> + SQLite, sin ORM
+  </footer>
+</body>
+</html>
+{{end}}

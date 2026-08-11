@@ -1,0 +1,46 @@
+{{define "title"}}Book Reviews — Inicio{{end}}
+
+{{define "content"}}
+<h1>Book Reviews</h1>
+<p class="lead">Aplicación de reseñas de libros. Go <code>net/http</code> + SQLite, sin ORM.</p>
+
+<h2>CRUD</h2>
+<div class="grid">
+  <a class="card" href="/authors">
+    <h3>Autores</h3>
+    <p>Nombre, fecha de nacimiento, país y descripción.</p>
+  </a>
+  <a class="card" href="/books">
+    <h3>Libros</h3>
+    <p>Nombre, resumen, fecha de publicación, ventas y autor.</p>
+  </a>
+  <a class="card" href="/reviews">
+    <h3>Reseñas</h3>
+    <p>Texto, puntaje de 1 a 5 y up-votes.</p>
+  </a>
+  <a class="card" href="/sales">
+    <h3>Ventas por año</h3>
+    <p>Ventas de cada libro desglosadas por año.</p>
+  </a>
+</div>
+
+<h2>Tablas y reportes</h2>
+<div class="grid">
+  <a class="card" href="/authors/stats">
+    <h3>Tabla de autores</h3>
+    <p>Libros publicados, score promedio y ventas totales, con orden y filtro por columna.</p>
+  </a>
+  <a class="card" href="/books/top-rated">
+    <h3>Top 10 mejor evaluados</h3>
+    <p>Con su reseña mejor y peor evaluada.</p>
+  </a>
+  <a class="card" href="/books/top-selling">
+    <h3>Top 50 más vendidos</h3>
+    <p>Ventas del libro, del autor y si entró al top 5 de su año de publicación.</p>
+  </a>
+  <a class="card" href="/search">
+    <h3>Búsqueda</h3>
+    <p>Libros cuyo resumen contenga cualquiera de las palabras buscadas.</p>
+  </a>
+</div>
+{{end}}

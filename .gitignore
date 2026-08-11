@@ -1,0 +1,14 @@
+# Base de datos local (se regenera con migrate + seed)
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+
+# Binarios compilados
+/bin/
+/server
+/seed
+
+# macOS
+.DS_Store
+
+Claude.md
