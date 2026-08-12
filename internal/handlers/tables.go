@@ -8,7 +8,6 @@ import (
 	"bookreviews/internal/store"
 )
 
-// Cantidades que pide el enunciado para cada tabla.
 const (
 	topRatedLimit   = 10
 	topSellingLimit = 50
@@ -29,13 +28,10 @@ type authorStatsPage struct {
 	Rows    []store.AuthorStatsRow
 	Headers []columnHeader
 	Filters authorStatsFilters
-	// Ignored lista los filtros que se descartaron por no ser numéricos, para
-	// no fallar en silencio cuando alguien escribe "tres" en un campo de número.
+
 	Ignored []string
 }
 
-// authorStatsFilters conserva lo que el usuario escribió, tal cual, para
-// re-dibujar el formulario con sus valores.
 type authorStatsFilters struct {
 	Name     string
 	MinBooks string
@@ -77,8 +73,6 @@ func (h *Handler) authorStats(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// toStoreFilter convierte los campos de texto del formulario en el filtro
-// tipado del store, y devuelve las etiquetas de los que hubo que descartar.
 func (f authorStatsFilters) toStoreFilter() (store.AuthorFilter, []string) {
 	var ignored []string
 
@@ -97,12 +91,6 @@ func (f authorStatsFilters) toStoreFilter() (store.AuthorFilter, []string) {
 		return value
 	}
 
-	// Cada campo se resuelve en su propia variable antes de armar el struct.
-	// Poner las llamadas dentro del literal y devolver `ignored` en el mismo
-	// return deja el resultado a merced del orden de evaluación: la
-	// especificación de Go solo garantiza que las llamadas a función se
-	// evalúen de izquierda a derecha entre sí, no respecto de la lectura de una
-	// variable que esas mismas llamadas van modificando.
 	minBooks := intField(f.MinBooks, "libros (mínimo)")
 	maxBooks := intField(f.MaxBooks, "libros (máximo)")
 	minScore := floatField(f.MinScore, "score (mínimo)")
@@ -122,8 +110,6 @@ func (f authorStatsFilters) toStoreFilter() (store.AuthorFilter, []string) {
 	return filter, ignored
 }
 
-// authorStatsHeaders arma un encabezado por columna ordenable, conservando los
-// filtros vigentes en el enlace y alternando la dirección de la columna activa.
 func authorStatsHeaders(query url.Values) []columnHeader {
 	columns := []struct {
 		key     string
@@ -146,8 +132,6 @@ func authorStatsHeaders(query url.Values) []columnHeader {
 	for _, column := range columns {
 		isActive := column.key == activeSort
 
-		// Al clickear la columna activa se invierte el orden; al clickear otra,
-		// se empieza por ascendente.
 		nextDir := "asc"
 		if isActive && activeAsc {
 			nextDir = "desc"
@@ -186,8 +170,6 @@ func (h *Handler) topSellingBooks(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "books_top_selling.html", rows)
 }
 
-// parseOptionalInt devuelve nil para un campo vacío (sin filtro) y ok=false
-// cuando hay texto que no es un número.
 func parseOptionalInt(raw string) (*int, bool) {
 	if raw == "" {
 		return nil, true

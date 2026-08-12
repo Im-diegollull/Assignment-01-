@@ -1,4 +1,4 @@
-/* Book Reviews — CSS plano, sin build step ni framework. */
+
 
 :root {
   --bg: #f6f7f9;
@@ -6,13 +6,7 @@
   --border: #dfe3e8;
   --text: #1c2126;
   --muted: #626d78;
-  /* El acento se usa para dos cosas que un amarillo único no puede cubrir:
-     texto sobre fondo claro (enlaces) y fondo de botones. Un amarillo vivo
-     como texto sobre blanco es ilegible, y con texto blanco encima lo es más
-     todavía. Por eso son tres tonos:
-       --accent        ámbar oscuro, para texto y bordes  (5.4:1 sobre blanco)
-       --accent-bright amarillo vivo, solo como fondo
-       --accent-ink    marrón casi negro, el texto que va sobre el amarillo */
+  
   --accent: #8a5f00;
   --accent-bright: #ffc300;
   --accent-ink: #241a00;
@@ -66,9 +60,7 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* El logo va con el amarillo fuerte. Es una marca, no texto de lectura: el
-   contraste sobre blanco es bajo, pero "Book" al lado va en el color del texto
-   y es lo que sostiene la legibilidad del conjunto. */
+/* El logo  */
 .brand span { color: var(--accent-bright); }
 
 .topbar nav {
@@ -97,10 +89,7 @@ h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
 
 .lead { color: var(--muted); margin-top: 0; }
 
-/* Los enlaces no llevan el amarillo en el texto sino en el subrayado.
-   Un amarillo legible sobre blanco tiene que ser oscuro, y ahí deja de leerse
-   como amarillo: queda un ocre apagado. Así el nombre va en negro nítido
-   (16:1) y el amarillo aparece abajo, saturado y sin comprometer la lectura. */
+/* Los enlaces no llevan el amarillo en el texto sino en el subrayado.*/
 a {
   color: var(--text);
   text-decoration: underline;

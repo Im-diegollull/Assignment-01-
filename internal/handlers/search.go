@@ -12,16 +12,12 @@ import (
 const searchPageSize = 10
 
 type searchPage struct {
-	// Query es lo que el usuario escribió, tal cual, para dejarlo en el input.
 	Query string
-	// Terms son las palabras que efectivamente se buscaron. Se muestran porque
-	// no siempre coinciden con lo escrito: se descartan las de un carácter, las
-	// repetidas y todo lo que pase de MaxSearchTerms.
+
 	Terms      []string
 	Books      []store.BookWithAuthor
 	Pagination pagination
-	// Searched distingue "todavía no buscaste nada" de "buscaste y no hubo
-	// resultados", que son dos estados vacíos con mensajes distintos.
+
 	Searched bool
 }
 
@@ -36,8 +32,6 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Solo se conserva el término en los enlaces de paginación; el ?page= lo
-	// pone newPagination.
 	keep := url.Values{}
 	if query != "" {
 		keep.Set("q", query)

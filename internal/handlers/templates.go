@@ -11,11 +11,6 @@ import (
 	"bookreviews/web"
 )
 
-// parseTemplates arma un conjunto de plantillas independiente por cada página
-// de web/templates/pages. Cada conjunto incluye el layout base y todos los
-// parciales, de modo que dos páginas puedan definir el bloque "content" sin
-// pisarse entre sí (lo que ocurriría si se parseara todo en un único
-// template.Template).
 func parseTemplates() (map[string]*template.Template, error) {
 	pages, err := fs.Glob(web.Files, "templates/pages/*.html")
 	if err != nil {

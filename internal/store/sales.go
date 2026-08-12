@@ -11,12 +11,8 @@ import (
 
 type SaleStore struct{ db *sql.DB }
 
-// ErrDuplicateSaleYear indica que ese libro ya tiene una fila para ese año.
-// La base lo impide con UNIQUE(book_id, year); el store lo detecta antes para
-// poder devolver un mensaje por campo en vez de un error de constraint crudo.
 var ErrDuplicateSaleYear = errors.New("store: el libro ya tiene ventas registradas para ese año")
 
-// SaleWithBook es el view model de los listados de ventas.
 type SaleWithBook struct {
 	models.Sale
 	BookName string
@@ -89,9 +85,6 @@ func (s *SaleStore) Get(ctx context.Context, id int64) (SaleWithBook, error) {
 
 const createSaleSQL = `INSERT INTO sales_by_year (book_id, year, sales) VALUES (?, ?, ?)`
 
-// Create inserta la venta y recalcula el total del libro dentro de la misma
-// transacción: la fila nueva y el books.number_of_sales actualizado se hacen
-// visibles juntos o no se hace ninguno de los dos.
 func (s *SaleStore) Create(ctx context.Context, sale *models.Sale) error {
 	return inTx(ctx, s.db, func(tx *sql.Tx) error {
 		taken, err := saleYearTaken(ctx, tx, sale.BookID, sale.Year, 0)
@@ -118,9 +111,6 @@ func (s *SaleStore) Create(ctx context.Context, sale *models.Sale) error {
 
 const updateSaleSQL = `UPDATE sales_by_year SET book_id = ?, year = ?, sales = ? WHERE id = ?`
 
-// Update recalcula el total del libro nuevo y, si la venta cambió de libro,
-// también el del anterior: si no, el libro de origen quedaría contando ventas
-// que ya no le pertenecen.
 func (s *SaleStore) Update(ctx context.Context, sale *models.Sale) error {
 	return inTx(ctx, s.db, func(tx *sql.Tx) error {
 		var previousBookID int64
@@ -184,11 +174,6 @@ UPDATE books
 SET number_of_sales = COALESCE((SELECT SUM(sales) FROM sales_by_year WHERE book_id = ?), 0)
 WHERE id = ?`
 
-// recalcBookSales vuelve a derivar books.number_of_sales desde sales_by_year.
-// Es la contrapartida de mantener el campo denormalizado: cualquier escritura
-// sobre las ventas por año tiene que llamarlo, dentro de la misma transacción.
-// El COALESCE cubre el caso de borrar la última fila de ventas del libro, donde
-// SUM devuelve NULL y el total tiene que quedar en 0, no en NULL.
 func recalcBookSales(ctx context.Context, exec executor, bookID int64) error {
 	if _, err := exec.ExecContext(ctx, recalcBookSalesSQL, bookID, bookID); err != nil {
 		return fmt.Errorf("store: recalcular ventas del libro %d: %w", bookID, err)
@@ -196,8 +181,6 @@ func recalcBookSales(ctx context.Context, exec executor, bookID int64) error {
 	return nil
 }
 
-// saleYearTaken responde si otro registro ya ocupa ese par (libro, año).
-// excludeID permite que una edición no choque consigo misma.
 func saleYearTaken(ctx context.Context, exec executor, bookID int64, year int, excludeID int64) (bool, error) {
 	const query = `SELECT 1 FROM sales_by_year WHERE book_id = ? AND year = ? AND id <> ? LIMIT 1`
 

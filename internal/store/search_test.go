@@ -50,8 +50,6 @@ func TestSearchTermsRespetaElTope(t *testing.T) {
 	}
 }
 
-// newSearchFixture crea libros con resúmenes conocidos para poder afirmar
-// exactamente qué tiene que traer cada búsqueda.
 func newSearchFixture(t *testing.T, s *Store) {
 	t.Helper()
 	ctx := context.Background()

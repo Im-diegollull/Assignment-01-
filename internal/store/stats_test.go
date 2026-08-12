@@ -9,22 +9,6 @@ import (
 	"bookreviews/internal/models"
 )
 
-// Dataset chico y armado a mano. Los valores esperados de cada test están
-// calculados a partir de estas cifras, no leídos de la salida del programa: si
-// se calcularan con el mismo código que se quiere probar, el test no probaría
-// nada.
-//
-//	Autora A "Alba"   — 2 libros
-//	  L1 "Uno"   pub 2000  reseñas 5,5,4 (prom 4.667)  ventas 2000:100, 2001:50   → 150
-//	  L2 "Dos"   pub 2001  reseñas 2,4   (prom 3.0)    ventas 2001:900            → 900
-//	Autor  B "Bruno"  — 1 libro
-//	  L3 "Tres"  pub 2000  reseñas 5     (prom 5.0)    ventas 2000:300            → 300
-//	Autora C "Cora"   — 1 libro, sin reseñas
-//	  L4 "Cuatro" pub 2001                             ventas 2001:20             → 20
-//	Autor  D "Dante"  — sin libros
-//
-// Totales por autor:  Alba 1050 (2 libros),  Bruno 300 (1),  Cora 20 (1),  Dante 0 (0)
-// Promedios por autor: Alba (5+5+4+2+4)/5 = 4.0,  Bruno 5.0,  Cora NULL,  Dante NULL
 type statsFixture struct {
 	alba, bruno, cora, dante models.Author
 	uno, dos, tres, cuatro   models.Book
@@ -103,9 +87,7 @@ func TestAuthorStatsAgregaSinFanOut(t *testing.T) {
 		avgScore   float64
 		totalSales int
 	}{
-		// Alba tiene 5 reseñas repartidas en 2 libros. Si la query uniera
-		// authors, books y reviews de una sola vez, sus ventas se contarían una
-		// vez por reseña y darían 150*3 + 900*2 = 2250 en vez de 1050.
+
 		{"Alba", 2, true, 4.0, 1050},
 		{"Bruno", 1, true, 5.0, 300},
 		{"Cora", 1, false, 0, 20},
@@ -238,7 +220,6 @@ func TestAuthorStatsFiltros(t *testing.T) {
 	}
 }
 
-// El input del usuario tiene que viajar como argumento, nunca concatenado.
 func TestAuthorFilterConditionsEsPuraYParametrizada(t *testing.T) {
 	min, max := 2, 8
 	filter := AuthorFilter{NameLike: "  O'Brien  ", MinBooks: &min, MaxSales: &max}
@@ -260,7 +241,6 @@ func TestAuthorFilterConditionsEsPuraYParametrizada(t *testing.T) {
 		}
 	}
 
-	// El LIKE se arma con los comodines alrededor del texto ya recortado.
 	if args[0] != "%O'Brien%" {
 		t.Errorf("args[0] = %v, se esperaba %q", args[0], "%O'Brien%")
 	}

@@ -1,6 +1,13 @@
 # Book Review Web App — Grupo 3
 
-App web de reseñas de libros. Arquitectura de Software, Universidad de los Andes.
+Students:
+Cristobal Gazitua
+Diego Giordano
+Diego LLull
+Carlos Renocret
+
+
+App web de reseñas de libros. 
 
 | Ítem | Valor |
 |---|---|

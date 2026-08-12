@@ -1,11 +1,5 @@
 package models
 
-// Author es un autor de libros.
-//
-// Los campos opcionales son string y no *string ni sql.NullString: el store
-// lee las columnas con COALESCE y convierte los NULL en cadena vacía, así que
-// una cadena vacía representa "sin dato" en todo el proyecto. Evita punteros en
-// las plantillas y mantiene models sin importar database/sql.
 type Author struct {
 	ID              int64
 	Name            string

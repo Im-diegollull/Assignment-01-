@@ -1,5 +1,4 @@
-// Package web contiene middleware HTTP genérico, independiente de los
-// recursos concretos de la aplicación.
+// Package web contiene middleware HTTP genérico
 package web
 
 import (
@@ -11,8 +10,6 @@ import (
 // Middleware es la forma que ya usa la stdlib para decorar handlers.
 type Middleware func(http.Handler) http.Handler
 
-// Chain aplica los middleware en el orden en que se pasan: el primero de la
-// lista es el más externo, es decir el primero en ver el request.
 func Chain(h http.Handler, middleware ...Middleware) http.Handler {
 	for i := len(middleware) - 1; i >= 0; i-- {
 		h = middleware[i](h)
@@ -20,7 +17,6 @@ func Chain(h http.Handler, middleware ...Middleware) http.Handler {
 	return h
 }
 
-// LogRequests registra método, ruta, status y duración de cada request.
 func LogRequests(logger *slog.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -37,8 +33,6 @@ func LogRequests(logger *slog.Logger) Middleware {
 	}
 }
 
-// RecoverPanic evita que un panic en un handler mate al proceso completo y lo
-// convierte en un 500.
 func RecoverPanic(logger *slog.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +48,6 @@ func RecoverPanic(logger *slog.Logger) Middleware {
 	}
 }
 
-// statusRecorder recuerda el status escrito para poder registrarlo.
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
