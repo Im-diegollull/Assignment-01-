@@ -17,8 +17,8 @@ import (
 
 func main() {
 	var (
-		addr        = flag.String("addr", ":8080", "dirección HTTP de escucha")
-		dbPath      = flag.String("db", database.DefaultPath, "ruta del archivo SQLite")
+		addr        = flag.String("addr", ":"+envOrDefault("PORT", "8080"), "dirección HTTP de escucha")
+		dbPath      = flag.String("db", envOrDefault("DB_PATH", database.DefaultPath), "ruta del archivo SQLite")
 		migrateOnly = flag.Bool("migrate", false, "aplicar el esquema y salir, sin levantar el servidor")
 	)
 	flag.Parse()
@@ -71,4 +71,14 @@ func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
 
 	logger.Info("servidor iniciado", "addr", addr)
 	return srv.ListenAndServe()
+}
+
+// envOrDefault lee una variable de entorno y cae al default si no está seteada
+// o está vacía. Los flags (-addr, -db) siguen pudiendo sobreescribirla: el
+// entorno solo cambia el valor por defecto del flag.
+func envOrDefault(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
 }

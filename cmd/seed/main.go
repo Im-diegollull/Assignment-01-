@@ -20,7 +20,7 @@ import (
 
 func main() {
 	var (
-		dbPath   = flag.String("db", database.DefaultPath, "ruta del archivo SQLite")
+		dbPath   = flag.String("db", envOrDefault("DB_PATH", database.DefaultPath), "ruta del archivo SQLite")
 		reset    = flag.Bool("reset", false, "vaciar las tablas antes de sembrar")
 		randSeed = flag.Int64("seed", 42, "semilla del generador; la misma semilla produce los mismos datos")
 	)
@@ -120,4 +120,12 @@ func populate(ctx context.Context, st *store.Store, randSeed int64, logger *slog
 
 	logger.Info("seed completo", "semilla", randSeed)
 	return nil
+}
+
+// envOrDefault lee una variable de entorno y cae al default si no está seteadan o está vacía.
+func envOrDefault(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
 }

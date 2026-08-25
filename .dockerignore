@@ -1,0 +1,22 @@
+.git
+.gitignore
+
+# Base de datos de desarrollo 
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Binarios compilados localmente
+/bin/
+/server
+/seed
+
+# Documentación y metadata del repo
+docs/
+README.md
+
+# Editor / SO
+.DS_Store
+.vscode/
+.idea/

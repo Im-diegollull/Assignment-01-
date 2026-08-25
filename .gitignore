@@ -8,6 +8,9 @@
 /server
 /seed
 /docs
+
+# Configuración local de docker compose
+/.env
 # macOS
 .DS_Store
 
