@@ -22,7 +22,6 @@ FROM authors
 ORDER BY name COLLATE NOCASE
 LIMIT ? OFFSET ?`
 
-// List devuelve una página de autores y la misma Page con Total completado.
 func (s *AuthorStore) List(ctx context.Context, page Page) ([]models.Author, Page, error) {
 	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM authors`).Scan(&page.Total); err != nil {
 		return nil, page, fmt.Errorf("store: contar autores: %w", err)
@@ -50,8 +49,6 @@ func (s *AuthorStore) List(ctx context.Context, page Page) ([]models.Author, Pag
 
 const allAuthorsSQL = `SELECT id, name FROM authors ORDER BY name COLLATE NOCASE`
 
-// All devuelve id y nombre de todos los autores, para poblar los <select> del
-// formulario de libros. No pagina a propósito: son 50 registros.
 func (s *AuthorStore) All(ctx context.Context) ([]models.Author, error) {
 	rows, err := s.db.QueryContext(ctx, allAuthorsSQL)
 	if err != nil {
@@ -91,7 +88,6 @@ const createAuthorSQL = `
 INSERT INTO authors (name, date_of_birth, country_of_origin, description)
 VALUES (?, ?, ?, ?)`
 
-// Create inserta el autor y completa a.ID con el id asignado.
 func (s *AuthorStore) Create(ctx context.Context, a *models.Author) error {
 	res, err := s.db.ExecContext(ctx, createAuthorSQL,
 		a.Name, a.DateOfBirth, a.CountryOfOrigin, a.Description)
@@ -121,8 +117,6 @@ func (s *AuthorStore) Update(ctx context.Context, a *models.Author) error {
 	return affectedOne(res, fmt.Sprintf("actualizar autor %d", a.ID))
 }
 
-// Delete borra el autor. Sus libros, y en cadena las reseñas y ventas de esos
-// libros, se van con él por el ON DELETE CASCADE del esquema.
 func (s *AuthorStore) Delete(ctx context.Context, id int64) error {
 	res, err := s.db.ExecContext(ctx, `DELETE FROM authors WHERE id = ?`, id)
 	if err != nil {
@@ -131,7 +125,6 @@ func (s *AuthorStore) Delete(ctx context.Context, id int64) error {
 	return affectedOne(res, fmt.Sprintf("borrar autor %d", id))
 }
 
-// scanner cubre por igual a *sql.Row y *sql.Rows.
 type scanner interface{ Scan(dest ...any) error }
 
 func scanAuthor(src scanner, a *models.Author) error {

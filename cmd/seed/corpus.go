@@ -1,12 +1,5 @@
 package main
 
-// Vocabulario del generador. Todo el contenido es inventado y se combina
-// proceduralmente: no se consulta ninguna API ni se copian datos reales.
-//
-// Las listas están pensadas para que los resúmenes compartan vocabulario entre
-// libros. Eso es lo que hace interesante a la búsqueda de la §5.4: buscar
-// "naufragio memoria" tiene que traer varios resultados, no cero ni los 300.
-
 var firstNames = []string{
 	"Adriana", "Alonso", "Amparo", "Aníbal", "Beatriz", "Benjamín", "Camila",
 	"Casimiro", "Clara", "Damián", "Delfina", "Elías", "Emilia", "Ernesto",
@@ -34,11 +27,6 @@ var countries = []string{
 	"Costa Rica", "Portugal",
 }
 
-// Rasgos para armar la descripción del autor.
-//
-// Los nombres de firstNames son masculinos y femeninos, y el generador no sabe
-// cuál le tocó a cada autor. Por eso tanto los roles como los rasgos usan solo
-// formas invariables en género: "novelista" sirve para ambos, "traductora" no.
 var authorRoles = []string{
 	"novelista", "cuentista", "poeta y ensayista", "cronista",
 	"periodista y novelista", "ensayista", "novelista y guionista",
@@ -93,12 +81,6 @@ var titlePlaces = []string{
 	"la costa rota", "San Cristóbal", "el kilómetro cero",
 }
 
-// Plantillas de resumen. Cada %s se rellena con una pieza de las listas de
-// abajo; la variedad de vocabulario es deliberada, para que la búsqueda por
-// palabras del resumen devuelva conjuntos distintos según el término.
-// Las plantillas evitan participios y adjetivos que concuerden en género con el
-// personaje ("varado", "aislado"): los personajes de summaryCharacters mezclan
-// masculino y femenino, y el generador no conjuga.
 var summaryOpenings = []string{
 	"Tras la muerte de su padre, %s regresa a %s para vender la casa familiar.",
 	"Durante un verano interminable, %s descubre un archivo olvidado en %s.",

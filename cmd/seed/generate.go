@@ -22,17 +22,12 @@ const (
 	lastPubYear    = 2020
 	minBirthYear   = 1900
 	lastBirthYear  = 1985
-	minAuthorAge   = 24 // años entre el nacimiento del autor y su primer libro
+	minAuthorAge   = 24
 	maxCalendarEnd = 2026
 
-	// slowBurnerShare es la proporción de libros que llegan a su pico de ventas
-	// años después de publicarse, en vez de el primer año.
 	slowBurnerShare = 0.18
 )
 
-// generator concentra la aleatoriedad en un único *rand.Rand. Todas las
-// decisiones se toman en orden y desde esta misma fuente: con la misma semilla,
-// el dataset resultante es idéntico bit a bit.
 type generator struct {
 	rnd *rand.Rand
 }
@@ -41,33 +36,20 @@ func newGenerator(seed int64) *generator {
 	return &generator{rnd: rand.New(rand.NewSource(seed))}
 }
 
-// bookPlan lleva el libro junto a los dos rasgos ocultos que gobiernan sus
-// reseñas y sus ventas. No se persisten: solo alimentan la generación.
 type bookPlan struct {
 	book models.Book
 
-	// quality sesga los puntajes de las reseñas (1 a 5). Sin este sesgo por
-	// libro, todos los promedios convergerían a 3 y el top 10 de la §5.2 sería
-	// un empate masivo decidido por el desempate.
 	quality float64
 
-	// popularity es la magnitud de ventas del libro: la mayoría vende poco y
-	// unos pocos venden muchísimo.
 	popularity float64
 
-	// slowBurner marca los libros que no despegan el año en que salen sino
-	// varios años después (boca a boca, un premio, una adaptación). Sin ellos,
-	// todo libro muy vendido lo es porque arrasó su primer año, y la columna
-	// "top 5 de su año de publicación" del top 50 daría "Sí" en las 50 filas.
 	slowBurner bool
 }
 
-// pick elige un elemento al azar de una lista.
 func pick[T any](g *generator, options []T) T {
 	return options[g.rnd.Intn(len(options))]
 }
 
-// intBetween devuelve un entero en [min, max], ambos incluidos.
 func (g *generator) intBetween(min, max int) int {
 	if max <= min {
 		return min
@@ -97,9 +79,6 @@ func (g *generator) authors() []models.Author {
 	return authors
 }
 
-// authorDescription evita construcciones que concuerden en género con el rol:
-// "traductora y narradora" y "novelista" conviven en la misma lista, así que la
-// plantilla corta la frase antes de cualquier adjetivo.
 func (g *generator) authorDescription() string {
 	return fmt.Sprintf("%s. Su obra gira en torno a %s. %s",
 		capitalize(pick(g, authorRoles)),
@@ -107,10 +86,6 @@ func (g *generator) authorDescription() string {
 		pick(g, authorTraits))
 }
 
-// books reparte los libros entre los autores de forma despareja pero
-// garantizando que ninguno quede sin obra: primero se le da un libro a cada
-// autor y el resto se sortea con pesos, para que la tabla de la §5.1 tenga
-// autores de 1 libro y autores de 15.
 func (g *generator) books(authors []models.Author) []bookPlan {
 	weighted := make([]int, 0, numBooks)
 	for i := range authors {
@@ -143,10 +118,9 @@ func (g *generator) books(authors []models.Author) []bookPlan {
 				Summary:         g.summary(),
 				PublicationDate: g.dateIn(g.publicationYear(author)),
 			},
-			// Distribución centrada en 3.4 y recortada: la mayoría de los
-			// libros son del montón y unos pocos son muy buenos o muy malos.
+
 			quality: clampFloat(3.4+g.rnd.NormFloat64()*0.9, 1.2, 4.9),
-			// Exponencial: pocas superventas, larga cola de libros discretos.
+
 			popularity: g.rnd.ExpFloat64(),
 			slowBurner: g.rnd.Float64() < slowBurnerShare,
 		})
@@ -168,8 +142,7 @@ func (g *generator) title() string {
 }
 
 func (g *generator) summary() string {
-	// Varias plantillas empiezan con el personaje, que viene en minúscula
-	// ("una traductora"), así que la frase se capitaliza ya armada.
+
 	opening := capitalize(fmt.Sprintf(pick(g, summaryOpenings),
 		pick(g, summaryCharacters), pick(g, titlePlaces)))
 
@@ -180,19 +153,11 @@ func (g *generator) summary() string {
 	}, " "))
 }
 
-// contractPrepositions aplica las contracciones obligatorias del español. Los
-// lugares del corpus llevan artículo ("el sur", "el kilómetro cero"), así que
-// al insertarlos en una plantilla salen frases como "volver a el barrio".
-//
-// El espacio final de cada patrón es lo que evita tocar "de ella" o "a ellos",
-// donde no hay contracción.
 func contractPrepositions(text string) string {
 	text = strings.ReplaceAll(text, " a el ", " al ")
 	return strings.ReplaceAll(text, " de el ", " del ")
 }
 
-// publicationYear ubica el libro después de que el autor cumpliera minAuthorAge
-// y dentro de la ventana de publicación del dataset.
 func (g *generator) publicationYear(author models.Author) int {
 	earliest := firstPubYear
 	if birth := yearOf(author.DateOfBirth); birth > 0 && birth+minAuthorAge > earliest {
@@ -204,8 +169,6 @@ func (g *generator) publicationYear(author models.Author) int {
 	return g.intBetween(earliest, lastPubYear)
 }
 
-// reviews genera entre 1 y 10 reseñas por libro, con el puntaje sesgado por la
-// calidad oculta del libro.
 func (g *generator) reviews(plans []bookPlan) []models.Review {
 	reviews := make([]models.Review, 0, len(plans)*5)
 
@@ -227,12 +190,6 @@ func (g *generator) reviews(plans []bookPlan) []models.Review {
 	return reviews
 }
 
-// sales genera al menos 5 años consecutivos de ventas por libro, desde su año
-// de publicación.
-//
-// La mayoría de los libros sigue la curva de una novedad: el primer año es el
-// mejor y desde ahí cae. Los slowBurner hacen lo contrario, arrancan flojo y
-// llegan a su pico varios años después.
 func (g *generator) sales(plans []bookPlan) []models.Sale {
 	sales := make([]models.Sale, 0, len(plans)*8)
 
@@ -243,16 +200,11 @@ func (g *generator) sales(plans []bookPlan) []models.Sale {
 			span = maxCalendarEnd - startYear + 1
 		}
 		if span < minSalesYears {
-			span = minSalesYears // nunca por debajo del mínimo del enunciado
+			span = minSalesYears
 		}
 
-		// popularity es exponencial: elevarla al cuadrado convierte esa cola
-		// larga en órdenes de magnitud de diferencia entre un libro discreto y
-		// un éxito.
 		magnitude := 400 + plan.popularity*plan.popularity*9000
 
-		// El pico cae en el primer año salvo que el libro sea de los que
-		// despegan tarde; nunca después del anteúltimo año con datos.
 		peak := 0
 		if plan.slowBurner {
 			peak = min(g.intBetween(2, 5), span-2)
@@ -273,9 +225,6 @@ func (g *generator) sales(plans []bookPlan) []models.Sale {
 	return sales
 }
 
-// salesCurve devuelve el factor de ventas del año offset para un libro cuyo
-// pico está en el año peak. Antes del pico sube desde un 12%; después cae un
-// 40% por año.
 func salesCurve(offset, peak int) float64 {
 	if offset < peak {
 		return 0.12 + 0.88*float64(offset)/float64(peak)
@@ -283,8 +232,6 @@ func salesCurve(offset, peak int) float64 {
 	return math.Pow(0.6, float64(offset-peak))
 }
 
-// dateIn arma una fecha ISO dentro del año dado. El día se limita a 28 para no
-// tener que mirar el mes ni los años bisiestos.
 func (g *generator) dateIn(year int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, g.intBetween(1, 12), g.intBetween(1, 28))
 }
@@ -301,9 +248,6 @@ func clampFloat(value, min, max float64) float64 {
 	return math.Min(math.Max(value, min), max)
 }
 
-// capitalize pone en mayúscula la primera letra. Convierte a []rune en vez de
-// cortar con s[:1] porque las palabras del corpus llevan acentos: en UTF-8 un
-// carácter acentuado ocupa dos bytes y el corte por byte lo partiría al medio.
 func capitalize(s string) string {
 	if s == "" {
 		return s

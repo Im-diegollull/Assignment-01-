@@ -23,8 +23,7 @@ type Handler struct {
 	templates map[string]*template.Template
 }
 
-// New construye el Handler y deja las plantillas parseadas de antemano, para
-// que un error de sintaxis en un template falle al arrancar y no en runtime.
+// New construye el Handler y deja las plantillas parseadas de antemano
 func New(logger *slog.Logger, st *store.Store) (*Handler, error) {
 	templates, err := parseTemplates()
 	if err != nil {
@@ -33,12 +32,6 @@ func New(logger *slog.Logger, st *store.Store) (*Handler, error) {
 	return &Handler{logger: logger, store: st, templates: templates}, nil
 }
 
-// Routes declara el ruteo con el http.ServeMux de la stdlib (Go 1.22+), que ya
-// soporta método y wildcards en el patrón.
-//
-// Los formularios HTML solo saben hacer GET y POST, así que las acciones
-// destructivas tienen su propia ruta POST explícita en vez de un método
-// simulado con un campo _method.
 func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
 
@@ -46,13 +39,8 @@ func (h *Handler) Routes() http.Handler {
 	// se resuelve como "static/x.css" dentro del FS, sin StripPrefix.
 	mux.Handle("GET /static/", http.FileServerFS(web.Files))
 
-	// "/{$}" matchea exactamente la raíz; sin el {$} sería un catch-all.
 	mux.HandleFunc("GET /{$}", h.home)
 
-	// El patrón literal /authors/new gana sobre el wildcard /authors/{id}:
-	// ServeMux elige siempre el más específico, sin importar el orden.
-	// Tablas de reporte. Van antes conceptualmente, pero el orden de registro
-	// no importa: ServeMux elige por especificidad, no por orden.
 	mux.HandleFunc("GET /search", h.search)
 	mux.HandleFunc("GET /authors/stats", h.authorStats)
 	mux.HandleFunc("GET /books/top-rated", h.topRatedBooks)
@@ -93,9 +81,6 @@ func (h *Handler) Routes() http.Handler {
 	return mux
 }
 
-// render escribe una página completa. La plantilla se ejecuta primero contra un
-// buffer: si falla a mitad de camino, el cliente recibe un 500 limpio en vez de
-// un HTML truncado con status 200 ya enviado.
 func (h *Handler) render(w http.ResponseWriter, status int, page string, data any) {
 	ts, ok := h.templates[page]
 	if !ok {
@@ -116,13 +101,10 @@ func (h *Handler) render(w http.ResponseWriter, status int, page string, data an
 	}
 }
 
-// redirect responde a un POST exitoso con 303 See Other, para que recargar la
-// página siguiente no reenvíe el formulario.
 func (h *Handler) redirect(w http.ResponseWriter, r *http.Request, url string) {
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
-// serverError registra el error real y devuelve un 500 genérico al cliente.
 func (h *Handler) serverError(w http.ResponseWriter, err error) {
 	h.logger.Error("error interno", "error", err)
 	http.Error(w, "Error interno del servidor", http.StatusInternalServerError)
@@ -132,8 +114,6 @@ func (h *Handler) notFound(w http.ResponseWriter) {
 	http.Error(w, "No encontrado", http.StatusNotFound)
 }
 
-// pathID lee el {id} de la ruta. Un id no numérico es un 404 y no un 400: la
-// URL simplemente no corresponde a ningún recurso.
 func pathID(r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil || id <= 0 {
@@ -146,8 +126,6 @@ func itoa(id int64) string {
 	return strconv.FormatInt(id, 10)
 }
 
-// parseInt64 se usa para los ?book_id=N que preseleccionan un desplegable. Un
-// valor inválido devuelve 0 y el formulario aparece sin preselección.
 func parseInt64(raw string) (int64, bool) {
 	value, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || value <= 0 {
@@ -156,13 +134,10 @@ func parseInt64(raw string) (int64, bool) {
 	return value, true
 }
 
-// pageParam devuelve la página pedida con el tamaño estándar de los listados.
 func pageParam(r *http.Request) store.Page {
 	return store.NewPage(pageNumber(r), store.DefaultPageSize)
 }
 
-// pageNumber lee ?page=N. Un valor ausente o inválido da 0, y NewPage lo
-// normaliza a la página 1.
 func pageNumber(r *http.Request) int {
 	number, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	return number

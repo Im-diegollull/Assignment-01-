@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-// Las plantillas se ejecutan recién en el request, así que un error de campo
-// mal escrito no lo detecta ni el compilador ni go vet. Este test las renderiza
-// todas contra datos representativos.
 func TestAuthorStatsSeRenderiza(t *testing.T) {
 	templates, err := parseTemplates()
 	if err != nil {

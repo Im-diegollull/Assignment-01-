@@ -8,16 +8,6 @@ import (
 	"bookreviews/internal/models"
 )
 
-// Este archivo tiene las operaciones masivas que usa cmd/seed. Existe para que
-// el generador de datos no escriba SQL: sembrar con los Create de a uno serían
-// miles de transacciones, y cada COMMIT en SQLite es un fsync.
-//
-// Cada CreateMany abre una única transacción y reutiliza un prepared statement
-// para todas las filas, así el motor parsea y planifica la sentencia una sola
-// vez.
-
-// Counts son las filas por tabla; se usa para decidir si la base ya está
-// sembrada.
 type Counts struct {
 	Authors int
 	Books   int

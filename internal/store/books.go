@@ -11,9 +11,6 @@ import (
 
 type BookStore struct{ db *sql.DB }
 
-// BookWithAuthor es un view model para los listados: models.Book solo guarda
-// AuthorID, pero las tablas muestran el nombre del autor. Se mantiene aparte
-// para no cargar la entidad de dominio con campos que vienen de un JOIN.
 type BookWithAuthor struct {
 	models.Book
 	AuthorName string
@@ -54,8 +51,6 @@ JOIN authors a ON a.id = b.author_id
 WHERE b.author_id = ?
 ORDER BY b.publication_date DESC`
 
-// ListByAuthor alimenta la ficha del autor. No pagina: un autor tiene del orden
-// de 6 libros en el dataset sembrado.
 func (s *BookStore) ListByAuthor(ctx context.Context, authorID int64) ([]BookWithAuthor, error) {
 	rows, err := s.db.QueryContext(ctx, listBooksByAuthorSQL, authorID)
 	if err != nil {
@@ -141,8 +136,6 @@ UPDATE books
 SET author_id = ?, name = ?, summary = ?, publication_date = ?, number_of_sales = ?
 WHERE id = ?`
 
-// Update permite editar number_of_sales a mano, pero cualquier alta, edición o
-// baja en sales_by_year lo vuelve a calcular y pisa ese valor.
 func (s *BookStore) Update(ctx context.Context, b *models.Book) error {
 	res, err := s.db.ExecContext(ctx, updateBookSQL,
 		b.AuthorID, b.Name, b.Summary, b.PublicationDate, b.NumberOfSales, b.ID)
