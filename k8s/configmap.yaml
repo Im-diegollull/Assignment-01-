@@ -1,0 +1,13 @@
+# Variables no sensibles que el binario lee vía os.Getenv (cmd/server/main.go,
+# cmd/seed/main.go): mismo par PORT / DB_PATH que ya se usaba en el .env de la
+# Fase 3, con el mismo nombre exacto que espera el proceso — ahí "APP_PORT" era
+# solo el nombre del lado del docker-compose.yml para el mapeo host:contenedor;
+# dentro del contenedor la app siempre esperó "PORT".
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: book-review-config
+  namespace: book-review-app
+data:
+  PORT: "8080"
+  DB_PATH: "/data/app.db"

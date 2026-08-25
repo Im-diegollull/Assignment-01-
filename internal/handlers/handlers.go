@@ -40,6 +40,7 @@ func (h *Handler) Routes() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(web.Files))
 
 	mux.HandleFunc("GET /{$}", h.home)
+	mux.HandleFunc("GET /healthz", h.healthz)
 
 	mux.HandleFunc("GET /search", h.search)
 	mux.HandleFunc("GET /authors/stats", h.authorStats)

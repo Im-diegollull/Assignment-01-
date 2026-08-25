@@ -1,0 +1,16 @@
+# accessMode ReadWriteOnce a propósito: SQLite es de un solo escritor por
+# archivo (ver el mismo comentario en docker-compose.yml sobre single-writer).
+# ReadWriteOnce ya refleja esa limitación a nivel de volumen — el scheduler
+# de Kubernetes solo deja montar este PVC en lectura/escritura desde los pods
+# de UN nodo a la vez.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlite-data
+  namespace: book-review-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

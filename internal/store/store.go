@@ -34,6 +34,12 @@ type executor interface {
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
+// Ping confirma que la conexión a la base sigue viva. Lo usa el healthcheck
+// HTTP (GET /healthz): esta app es un frontend delgado sobre SQLite.
+func (s *Store) Ping(ctx context.Context) error {
+	return s.db.PingContext(ctx)
+}
+
 func inTx(ctx context.Context, db *sql.DB, fn func(tx *sql.Tx) error) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {

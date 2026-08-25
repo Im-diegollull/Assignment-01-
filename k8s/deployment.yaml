@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-review-app
+  namespace: book-review-app
+  labels:
+    app.kubernetes.io/name: book-review-app
+spec:
+  replicas: 1
+  strategy:
+    # Recreate, no RollingUpdate: con accessMode ReadWriteOnce y un solo
+    # escritor posible, un rolling update normal podría intentar levantar el
+    # pod nuevo antes de apagar el viejo y los dos pelearían por el mismo
+    # volumen. Recreate apaga el pod actual antes de crear el siguiente.
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: book-review-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: book-review-app
+    spec:
+      containers:
+        - name: app
+          # Imagen buildeada localmente desde el Dockerfile de la Fase 1:
+          #   docker build -t bookreviews:local .
+          # (el target por defecto, "final", es la última etapa del
+          # Dockerfile).
+          image: bookreviews:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: book-review-config
+            - secretRef:
+                name: book-review-secrets
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: sqlite-data
