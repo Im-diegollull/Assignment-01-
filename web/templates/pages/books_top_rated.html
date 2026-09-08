@@ -6,12 +6,13 @@
     <h1>Top 10 libros mejor evaluados</h1>
     <p class="lead">De todos los tiempos, por promedio de puntaje, con su reseña
       mejor y peor evaluada.</p>
+    {{template "debug-banner" printf "esta tabla vino de %s" .Source}}
   </div>
 </div>
 
-{{if .}}
+{{if .Rows}}
 <ol class="ranking">
-  {{range .}}
+  {{range .Rows}}
   <li class="ranking-item">
     <div class="ranking-head">
       <div>

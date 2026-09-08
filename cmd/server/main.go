@@ -9,8 +9,11 @@ import (
 	"os"
 	"time"
 
+	"bookreviews/internal/cache"
 	"bookreviews/internal/database"
 	"bookreviews/internal/handlers"
+	"bookreviews/internal/search"
+	"bookreviews/internal/stats"
 	"bookreviews/internal/store"
 	"bookreviews/internal/web"
 )
@@ -53,7 +56,37 @@ func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
 		return nil
 	}
 
-	handler, err := handlers.New(logger, store.New(db))
+	st := store.New(db)
+
+	cacheClient := cache.Noop()
+	if redisAddr := envOrDefault("REDIS_ADDR", ""); redisAddr != "" {
+		redisCache, err := cache.OpenRedis(ctx, redisAddr)
+		if err != nil {
+			return err
+		}
+		defer redisCache.Close()
+		cacheClient = redisCache
+		logger.Info("cache Redis conectado", "addr", redisAddr)
+	} else {
+		logger.Info("cache desactivado: REDIS_ADDR vacío")
+	}
+
+	var engine search.Engine = search.SQL{Store: st}
+	if url := envOrDefault("OPENSEARCH_URL", ""); url != "" {
+		osEngine, err := search.Open(ctx, url, st)
+		if err != nil {
+			return err
+		}
+		if err := osEngine.ReindexAll(ctx); err != nil {
+			return err
+		}
+		engine = osEngine
+		logger.Info("OpenSearch conectado e índice sincronizado", "url", url)
+	} else {
+		logger.Info("búsqueda SQL: OPENSEARCH_URL vacío")
+	}
+
+	handler, err := handlers.New(logger, st, stats.New(st, cacheClient, logger), engine)
 	if err != nil {
 		return err
 	}

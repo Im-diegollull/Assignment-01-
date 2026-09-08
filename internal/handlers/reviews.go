@@ -76,6 +76,7 @@ func (h *Handler) reviewCreate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterReviewUpsert(r.Context(), review)
 	h.redirect(w, r, "/reviews/"+itoa(review.ID))
 }
 
@@ -117,6 +118,16 @@ func (h *Handler) reviewUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	previous, err := h.store.Reviews.Get(r.Context(), id)
+	if errors.Is(err, store.ErrNotFound) {
+		h.notFound(w)
+		return
+	}
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+
 	err = h.store.Reviews.Update(r.Context(), &review)
 	if errors.Is(err, store.ErrNotFound) {
 		h.notFound(w)
@@ -126,6 +137,7 @@ func (h *Handler) reviewUpdate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterReviewUpsert(r.Context(), review, previous.BookID)
 	h.redirect(w, r, "/reviews/"+itoa(id))
 }
 
@@ -136,7 +148,7 @@ func (h *Handler) reviewDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.store.Reviews.Delete(r.Context(), id)
+	previous, err := h.store.Reviews.Get(r.Context(), id)
 	if errors.Is(err, store.ErrNotFound) {
 		h.notFound(w)
 		return
@@ -145,6 +157,17 @@ func (h *Handler) reviewDelete(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+
+	err = h.store.Reviews.Delete(r.Context(), id)
+	if errors.Is(err, store.ErrNotFound) {
+		h.notFound(w)
+		return
+	}
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	h.afterReviewRemoved(r.Context(), previous.Review)
 	h.redirect(w, r, "/reviews")
 }
 

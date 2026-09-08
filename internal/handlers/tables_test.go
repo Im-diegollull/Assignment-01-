@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"bookreviews/internal/database"
@@ -42,7 +43,7 @@ func newTestHandler(t *testing.T) http.Handler {
 		t.Fatalf("crear reseña: %v", err)
 	}
 
-	handler, err := New(slog.New(slog.NewTextHandler(io.Discard, nil)), st)
+	handler, err := New(slog.New(slog.NewTextHandler(io.Discard, nil)), st, nil, nil)
 	if err != nil {
 		t.Fatalf("construir handler: %v", err)
 	}
@@ -85,6 +86,9 @@ func TestTablasDeReporteResponden(t *testing.T) {
 
 		if rec.Code != http.StatusOK {
 			t.Errorf("GET %s = %d, se esperaba 200. Cuerpo: %s", path, rec.Code, rec.Body.String())
+		}
+		if !strings.Contains(rec.Body.String(), "vino de SQLite") {
+			t.Errorf("GET %s no muestra el origen SQLite", path)
 		}
 	}
 }

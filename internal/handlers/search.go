@@ -17,6 +17,7 @@ type searchPage struct {
 	Terms      []string
 	Books      []store.BookWithAuthor
 	Pagination pagination
+	Backend    string
 
 	Searched bool
 }
@@ -26,7 +27,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	terms := store.SearchTerms(query)
 
 	page := store.NewPage(pageNumber(r), searchPageSize)
-	books, page, err := h.store.Books.Search(r.Context(), terms, page)
+	books, page, err := h.searcher.Search(r.Context(), terms, page)
 	if err != nil {
 		h.serverError(w, err)
 		return
@@ -42,6 +43,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		Terms:      terms,
 		Books:      books,
 		Pagination: newPagination("/search", keep, page),
+		Backend:    h.searcher.Name(),
 		Searched:   len(terms) > 0,
 	})
 }
