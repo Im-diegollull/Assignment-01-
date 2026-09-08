@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"bookreviews/internal/cache"
 	"bookreviews/internal/database"
 	"bookreviews/internal/models"
 	"bookreviews/internal/store"
@@ -105,6 +106,18 @@ func populate(ctx context.Context, st *store.Store, randSeed int64, logger *slog
 	logger.Info("ventas insertadas", "cantidad", len(sales))
 
 	logger.Info("seed completo", "semilla", randSeed)
+
+	if addr := envOrDefault("REDIS_ADDR", ""); addr != "" {
+		redisCache, err := cache.OpenRedis(ctx, addr)
+		if err != nil {
+			return fmt.Errorf("seed: no se pudo vaciar el cache: %w", err)
+		}
+		defer redisCache.Close()
+		if err := redisCache.Flush(ctx); err != nil {
+			return err
+		}
+		logger.Info("cache Redis vaciado")
+	}
 	return nil
 }
 

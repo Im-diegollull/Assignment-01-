@@ -104,7 +104,14 @@ cambiar con `-e PORT=3000 -e DB_PATH=/data/otra.db`.
 ```bash
 cp .env.example .env   # sin secretos: solo APP_PORT y DB_PATH
 docker compose up
+docker compose -f docker-compose.yml -f docker-compose.cache.yml up
+docker compose -f docker-compose.yml -f docker-compose.search.yml up
+docker compose -f docker-compose.yml -f docker-compose.cache.yml -f docker-compose.search.yml up
 ```
+
+`REDIS_ADDR` y `OPENSEARCH_URL` vacíos = la app corre igual, sin cache
+y con busqueda LIKE solo sobre el resumen.
+
 
 Dos servicios:
 
@@ -139,8 +146,13 @@ kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secret.yaml
 kubectl apply -f k8s/pvc.yaml
+kubectl apply -f k8s/redis-deployment.yaml
+kubectl apply -f k8s/opensearch-deployment.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
+
+# OpenSearch en minikube/k3d suele exigir:
+#   sudo sysctl -w vm.max_map_count=262144
 
 kubectl -n book-review-app get pods            # debe quedar 1/1 Running
 kubectl -n book-review-app get pvc             # debe quedar Bound
@@ -182,6 +194,9 @@ cmd/seed/            generador de datos de prueba
 internal/database    conexión SQLite + schema.sql
 internal/models      structs de dominio y su validación
 internal/store       acceso a datos (todo el SQL vive acá)
+internal/cache       cliente Redis / noop / memoria (tests)
+internal/stats       lecturas caras + invalidación, detrás del cache
+internal/search      OpenSearch o LIKE de Assignment 1
 internal/handlers    capa HTTP: parseo, validación, render y /healthz
 internal/web         middleware genérico
 web/templates        layout, parciales y páginas
@@ -189,13 +204,17 @@ web/static           CSS
 docs/DEVLOG.md       bitácora de desarrollo
 Dockerfile           build multi-stage: build → db-admin → final
 docker/              entrypoint del contenedor "db" (migrate + seed)
-docker-compose.yml   servicios "app" y "db", volumen sqlite-data
+docker-compose.yml         app + SQLite
+docker-compose.cache.yml   overlay Redis
+docker-compose.search.yml  overlay OpenSearch
+k8s/                       app, Redis, OpenSearch, pvc, config
+docs/CORRECTNESS.md        prueba de invalidación y sync
 .env.example         plantilla de variables (sin secretos)
-k8s/                 namespace, configmap, secret, pvc, deployment, service
 ```
 
 La dependencia va en un solo sentido: `handlers → store → database`, con
-`models` en la base. No hay SQL en `handlers` ni `net/http` en `store`.
+`stats`/`search` al lado (opcionales). No hay SQL en `handlers` ni
+`net/http` en `store`. Redis y OpenSearch se cablean en `cmd/server`.
 
 ## Estado
 
@@ -207,4 +226,5 @@ La dependencia va en un solo sentido: `handlers → store → database`, con
 - [x] Fase 6 — Búsqueda paginada
 - [x] Fase 7 — Containerización (Docker + Docker Compose)
 - [x] Fase 8 — Despliegue en Kubernetes (k3d)
-- [ ] Fase 9 — Pulido
+- [x] Fase 9 — Cache Redis (opcional) + search OpenSearch (opcional)
+- [ ] Fase 10 — Pulido

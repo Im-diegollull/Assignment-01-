@@ -4,8 +4,13 @@
 
 {{define "content"}}
 <h1>Búsqueda de libros</h1>
-<p class="lead">Busca por palabras del resumen. Trae los libros que contengan
+{{template "debug-banner" printf "esta búsqueda vino de %s" .Backend}}
+{{if eq .Backend "OpenSearch"}}
+<p class="lead">Título, resumen y texto de las reseñas, ordenado por relevancia.</p>
+{{else}}
+<p class="lead">Busca por palabras del resumen (SQLite LIKE). Trae los libros que contengan
   <strong>cualquiera</strong> de las palabras, no necesariamente todas.</p>
+{{end}}
 
 <form method="get" action="/search" class="search-form">
   <input type="search" name="q" value="{{.Query}}" autofocus
@@ -37,7 +42,7 @@
     </ul>
     {{template "pagination" .Pagination}}
   {{else}}
-    <p class="empty">Ningún libro tiene esas palabras en su resumen.
+    <p class="empty">Ningún libro matcheó esas palabras.
       Prueba con menos palabras o con otras.</p>
   {{end}}
 {{else if .Query}}

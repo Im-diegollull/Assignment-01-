@@ -93,6 +93,7 @@ func (h *Handler) bookCreate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterBookUpsert(r.Context(), book)
 	h.redirect(w, r, bookURL(book.ID))
 }
 
@@ -143,6 +144,7 @@ func (h *Handler) bookUpdate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterBookUpsert(r.Context(), book)
 	h.redirect(w, r, bookURL(id))
 }
 
@@ -162,6 +164,7 @@ func (h *Handler) bookDelete(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterBookRemoved(r.Context(), id)
 	h.redirect(w, r, "/books")
 }
 

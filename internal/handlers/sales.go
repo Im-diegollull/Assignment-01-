@@ -82,6 +82,7 @@ func (h *Handler) saleCreate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterSaleChange(r.Context())
 	h.redirect(w, r, "/sales/"+itoa(sale.ID))
 }
 
@@ -133,6 +134,7 @@ func (h *Handler) saleUpdate(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		h.serverError(w, err)
 	default:
+		h.afterSaleChange(r.Context())
 		h.redirect(w, r, "/sales/"+itoa(id))
 	}
 }
@@ -153,6 +155,7 @@ func (h *Handler) saleDelete(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterSaleChange(r.Context())
 	h.redirect(w, r, "/sales")
 }
 

@@ -82,6 +82,33 @@ body {
   color: var(--accent);
 }
 
+.debug-pills {
+  margin: 0;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.debug-pills span {
+  background: #241a00;
+  color: var(--accent-bright);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.debug-banner {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.25rem 0.6rem;
+  background: #241a00;
+  color: var(--accent-bright);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  border-radius: var(--radius);
+}
+
 /* ---------- Tipografía ---------- */
 
 h1 { font-size: 1.6rem; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
