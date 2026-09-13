@@ -81,6 +81,7 @@ func (h *Handler) authorCreate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterCatalogChange(r.Context())
 	h.redirect(w, r, authorURL(author.ID))
 }
 
@@ -133,6 +134,7 @@ func (h *Handler) authorUpdate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterCatalogChange(r.Context())
 	h.redirect(w, r, authorURL(id))
 }
 
@@ -143,7 +145,17 @@ func (h *Handler) authorDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.store.Authors.Delete(r.Context(), id)
+	books, err := h.store.Books.ListByAuthor(r.Context(), id)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	bookIDs := make([]int64, len(books))
+	for i, book := range books {
+		bookIDs[i] = book.ID
+	}
+
+	err = h.store.Authors.Delete(r.Context(), id)
 	if errors.Is(err, store.ErrNotFound) {
 		h.notFound(w)
 		return
@@ -152,6 +164,7 @@ func (h *Handler) authorDelete(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.afterBookRemoved(r.Context(), bookIDs...)
 	h.redirect(w, r, "/authors")
 }
 

@@ -12,6 +12,10 @@ import (
 )
 
 func parseTemplates() (map[string]*template.Template, error) {
+	return parseTemplatesWithDebug("off", "SQLite")
+}
+
+func parseTemplatesWithDebug(cacheName, searchName string) (map[string]*template.Template, error) {
 	pages, err := fs.Glob(web.Files, "templates/pages/*.html")
 	if err != nil {
 		return nil, fmt.Errorf("handlers: buscar páginas: %w", err)
@@ -23,7 +27,10 @@ func parseTemplates() (map[string]*template.Template, error) {
 	sets := make(map[string]*template.Template, len(pages))
 	for _, page := range pages {
 		name := filepath.Base(page)
-		ts, err := template.New(name).Funcs(templateFuncs).ParseFS(
+		ts, err := template.New(name).Funcs(templateFuncs).Funcs(template.FuncMap{
+			"debugCache":  func() string { return cacheName },
+			"debugSearch": func() string { return searchName },
+		}).ParseFS(
 			web.Files,
 			"templates/base.html",
 			"templates/partials/*.html",

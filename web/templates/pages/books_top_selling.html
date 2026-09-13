@@ -6,10 +6,11 @@
     <h1>Top 50 libros más vendidos</h1>
     <p class="lead">De todos los tiempos, con las ventas totales del autor y si
       el libro entró al top 5 de ventas de su año de publicación.</p>
+    {{template "debug-banner" printf "esta tabla vino de %s" .Source}}
   </div>
 </div>
 
-{{if .}}
+{{if .Rows}}
 <div class="table-wrap">
   <table>
     <thead>
@@ -24,7 +25,7 @@
       </tr>
     </thead>
     <tbody>
-      {{range $index, $book := .}}
+      {{range $index, $book := .Rows}}
       <tr>
         <td class="num muted">{{add $index 1}}</td>
         <td><a href="/books/{{$book.BookID}}">{{$book.BookName}}</a></td>

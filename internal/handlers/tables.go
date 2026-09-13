@@ -28,6 +28,7 @@ type authorStatsPage struct {
 	Rows    []store.AuthorStatsRow
 	Headers []columnHeader
 	Filters authorStatsFilters
+	Source  string
 
 	Ignored []string
 }
@@ -59,16 +60,18 @@ func (h *Handler) authorStats(w http.ResponseWriter, r *http.Request) {
 	filter.SortBy = query.Get("sort")
 	filter.Dir = query.Get("dir")
 
-	rows, err := h.store.Authors.AuthorStats(r.Context(), filter)
+	rows, from, err := h.stats.AuthorStats(r.Context(), filter)
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
 
+	w.Header().Set("X-Cache", from)
 	h.render(w, http.StatusOK, "authors_stats.html", authorStatsPage{
 		Rows:    rows,
 		Headers: authorStatsHeaders(query),
 		Filters: filters,
+		Source:  from,
 		Ignored: ignored,
 	})
 }
@@ -152,22 +155,34 @@ func authorStatsHeaders(query url.Values) []columnHeader {
 	return headers
 }
 
+type rankingPage struct {
+	Rows   []store.TopRatedBookRow
+	Source string
+}
+
+type sellingPage struct {
+	Rows   []store.TopSellingBookRow
+	Source string
+}
+
 func (h *Handler) topRatedBooks(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.store.Books.TopRated(r.Context(), topRatedLimit)
+	rows, from, err := h.stats.TopRated(r.Context(), topRatedLimit)
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
-	h.render(w, http.StatusOK, "books_top_rated.html", rows)
+	w.Header().Set("X-Cache", from)
+	h.render(w, http.StatusOK, "books_top_rated.html", rankingPage{Rows: rows, Source: from})
 }
 
 func (h *Handler) topSellingBooks(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.store.Books.TopSelling(r.Context(), topSellingLimit)
+	rows, from, err := h.stats.TopSelling(r.Context(), topSellingLimit)
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
-	h.render(w, http.StatusOK, "books_top_selling.html", rows)
+	w.Header().Set("X-Cache", from)
+	h.render(w, http.StatusOK, "books_top_selling.html", sellingPage{Rows: rows, Source: from})
 }
 
 func parseOptionalInt(raw string) (*int, bool) {

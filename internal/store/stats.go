@@ -114,17 +114,10 @@ FROM authors a
 LEFT JOIN book_stats   bs ON bs.author_id = a.id
 LEFT JOIN review_stats rs ON rs.author_id = a.id`
 
-// AuthorStats devuelve la tabla de autores con sus métricas, filtrada y
-// ordenada. No pagina: son 50 autores.
-func (s *AuthorStore) AuthorStats(ctx context.Context, filter AuthorFilter) ([]AuthorStatsRow, error) {
-	query := authorStatsSQL
-	fragments, args := filter.conditions()
-	if len(fragments) > 0 {
-		query += "\nWHERE " + strings.Join(fragments, "\n  AND ")
-	}
-	query += "\nORDER BY " + filter.orderBy()
-
-	rows, err := s.db.QueryContext(ctx, query, args...)
+// AuthorStatsAll es la query cara: métricas de todos los autores, sin
+// filtro. El orden es estable por id para que el cache pueda reordenar.
+func (s *AuthorStore) AuthorStatsAll(ctx context.Context) ([]AuthorStatsRow, error) {
+	rows, err := s.db.QueryContext(ctx, authorStatsSQL+"\nORDER BY a.id")
 	if err != nil {
 		return nil, fmt.Errorf("store: tabla de autores: %w", err)
 	}
@@ -143,6 +136,15 @@ func (s *AuthorStore) AuthorStats(ctx context.Context, filter AuthorFilter) ([]A
 		return nil, fmt.Errorf("store: tabla de autores: %w", err)
 	}
 	return stats, nil
+}
+
+// AuthorStats aplica filtro y orden en memoria sobre AuthorStatsAll.
+func (s *AuthorStore) AuthorStats(ctx context.Context, filter AuthorFilter) ([]AuthorStatsRow, error) {
+	rows, err := s.AuthorStatsAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ApplyAuthorFilter(rows, filter), nil
 }
 
 type TopRatedBookRow struct {
@@ -279,4 +281,15 @@ func (s *BookStore) TopSelling(ctx context.Context, limit int) ([]TopSellingBook
 		return nil, fmt.Errorf("store: top de libros más vendidos: %w", err)
 	}
 	return books, nil
+}
+
+// AverageScore es el promedio de reseñas de un libro. NULL si no tiene ninguna.
+func (s *BookStore) AverageScore(ctx context.Context, bookID int64) (sql.NullFloat64, error) {
+	var avg sql.NullFloat64
+	err := s.db.QueryRowContext(ctx,
+		`SELECT AVG(score) FROM reviews WHERE book_id = ?`, bookID).Scan(&avg)
+	if err != nil {
+		return avg, fmt.Errorf("store: promedio del libro %d: %w", bookID, err)
+	}
+	return avg, nil
 }

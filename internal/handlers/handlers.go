@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"bookreviews/internal/search"
+	"bookreviews/internal/stats"
 	"bookreviews/internal/store"
 	"bookreviews/web"
 )
@@ -20,16 +22,25 @@ import (
 type Handler struct {
 	logger    *slog.Logger
 	store     *store.Store
+	stats     *stats.Reader
+	searcher  search.Engine
 	templates map[string]*template.Template
 }
 
-// New construye el Handler y deja las plantillas parseadas de antemano
-func New(logger *slog.Logger, st *store.Store) (*Handler, error) {
-	templates, err := parseTemplates()
+// New construye el Handler y deja las plantillas parseadas de antemano.
+// reader o engine nil caen a cache noop y búsqueda SQL.
+func New(logger *slog.Logger, st *store.Store, reader *stats.Reader, engine search.Engine) (*Handler, error) {
+	if reader == nil {
+		reader = stats.New(st, nil, logger)
+	}
+	if engine == nil {
+		engine = search.SQL{Store: st}
+	}
+	templates, err := parseTemplatesWithDebug(reader.CacheName(), engine.Name())
 	if err != nil {
 		return nil, err
 	}
-	return &Handler{logger: logger, store: st, templates: templates}, nil
+	return &Handler{logger: logger, store: st, stats: reader, searcher: engine, templates: templates}, nil
 }
 
 func (h *Handler) Routes() http.Handler {
@@ -96,6 +107,8 @@ func (h *Handler) render(w http.ResponseWriter, status int, page string, data an
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("X-Search", h.searcher.Name())
+	w.Header().Set("X-Cache-Backend", h.stats.CacheName())
 	w.WriteHeader(status)
 	if _, err := buf.WriteTo(w); err != nil {
 		h.logger.Error("no se pudo escribir la respuesta", "page", page, "error", err)
