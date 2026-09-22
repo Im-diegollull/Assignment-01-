@@ -1,0 +1,85 @@
+x-app: &app
+  build:
+    context: .
+    target: final
+  environment:
+    PORT: "8080"
+    DB_PATH: /data/app.db
+    MEDIA_ROOT: /media
+    USE_REVERSE_PROXY: "true"
+    SESSION_BACKEND: redis
+    REDIS_ADDR: redis:6379
+    OPENSEARCH_URL: http://opensearch:9200
+    REINDEX_ON_START: "false"
+  volumes:
+    - sqlite-data:/data
+    - media-data:/media
+  depends_on:
+    index:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+    interval: 5s
+    timeout: 2s
+    retries: 12
+    start_period: 30s
+
+services:
+  db:
+    build:
+      context: .
+      target: db-admin
+    environment:
+      DB_PATH: /data/app.db
+    volumes:
+      - sqlite-data:/data
+  redis:
+    extends:
+      file: docker-compose.cache.yml
+      service: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+  opensearch:
+    extends:
+      file: docker-compose.search.yml
+      service: opensearch
+    volumes:
+      - search-data:/usr/share/opensearch/data
+  index:
+    build:
+      context: .
+      target: final
+    command: ["-reindex"]
+    environment:
+      DB_PATH: /data/app.db
+      OPENSEARCH_URL: http://opensearch:9200
+    volumes:
+      - sqlite-data:/data
+    depends_on:
+      db:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+  app:
+    <<: *app
+  app2:
+    <<: *app
+    profiles: [scale]
+  app3:
+    <<: *app
+    profiles: [scale]
+  caddy:
+    extends:
+      file: compose.edge.yml
+      service: caddy
+
+volumes:
+  sqlite-data:
+  media-data:
+  redis-data:
+  search-data:
+  caddy-data:
+  caddy-config:

@@ -40,3 +40,13 @@ CREATE INDEX IF NOT EXISTS idx_books_author ON books(author_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_book ON reviews(book_id);
 CREATE INDEX IF NOT EXISTS idx_sales_book  ON sales_by_year(book_id);
 CREATE INDEX IF NOT EXISTS idx_sales_year  ON sales_by_year(year);
+
+CREATE TABLE IF NOT EXISTS book_images (
+  book_id INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+  path TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS author_images (
+  author_id INTEGER PRIMARY KEY REFERENCES authors(id) ON DELETE CASCADE,
+  path TEXT NOT NULL
+);

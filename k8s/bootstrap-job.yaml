@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bookreviews-bootstrap
+  namespace: book-review-app
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        bookreviews-storage: local
+      securityContext:
+        fsGroup: 101
+      initContainers:
+        - name: permissions
+          image: bookreviews:local
+          command: ["sh", "-c", "chown 100:101 /data /media"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
+            - name: media-data
+              mountPath: /media
+        - name: seed
+          image: bookreviews:local
+          command: ["/app/seed", "--if-empty"]
+          env:
+            - name: DB_PATH
+              value: /data/app.db
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
+      containers:
+        - name: index
+          image: bookreviews:local
+          args: ["-reindex"]
+          env:
+            - name: DB_PATH
+              value: /data/app.db
+            - name: OPENSEARCH_URL
+              value: http://opensearch:9200
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
+      volumes:
+        - name: sqlite-data
+          persistentVolumeClaim:
+            claimName: sqlite-data
+        - name: media-data
+          persistentVolumeClaim:
+            claimName: media-data

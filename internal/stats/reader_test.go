@@ -43,7 +43,7 @@ func seedTiny(t *testing.T, st *store.Store) (author models.Author, book models.
 	if err := st.Books.Create(ctx, &book); err != nil {
 		t.Fatalf("libro: %v", err)
 	}
-	review := models.Review{BookID: book.ID, Text: "bueno", Score: 4}
+	review = models.Review{BookID: book.ID, Text: "bueno", Score: 4}
 	if err := st.Reviews.Create(ctx, &review); err != nil {
 		t.Fatalf("reseña: %v", err)
 	}

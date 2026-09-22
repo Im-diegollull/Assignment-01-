@@ -13,6 +13,7 @@ type Book struct {
 	PublicationDate string // ISO 'YYYY-MM-DD'
 
 	NumberOfSales int
+	ImagePath     string
 }
 
 func (b *Book) Validate() Errors {

@@ -14,6 +14,15 @@
   </div>
 </div>
 
+{{if .Author.ImagePath}}
+<img class="entity-image" src="/media/{{.Author.ImagePath}}" alt="Imagen de {{.Author.Name}}" width="240" height="300">
+{{end}}
+<form method="post" action="/authors/{{.Author.ID}}/image" enctype="multipart/form-data" class="image-form">
+  <label for="Image">Imagen</label>
+  <input type="file" id="Image" name="Image" accept="image/png,image/jpeg,image/gif" required>
+  <button type="submit" class="btn btn-secondary">Guardar imagen</button>
+</form>
+
 <dl class="detail">
   <dt>Fecha de nacimiento</dt>
   <dd>{{if .Author.DateOfBirth}}{{.Author.DateOfBirth}}{{else}}—{{end}}</dd>

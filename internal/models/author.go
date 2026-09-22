@@ -6,6 +6,7 @@ type Author struct {
 	DateOfBirth     string // ISO 'YYYY-MM-DD', "" si no se informó
 	CountryOfOrigin string
 	Description     string
+	ImagePath       string
 }
 
 func (a *Author) Validate() Errors {

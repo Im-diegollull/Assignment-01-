@@ -17,7 +17,8 @@ type BookWithAuthor struct {
 }
 
 const bookColumns = `b.id, b.author_id, b.name, COALESCE(b.summary, ''), ` +
-	`COALESCE(b.publication_date, ''), b.number_of_sales`
+	`COALESCE(b.publication_date, ''), b.number_of_sales, ` +
+	`COALESCE((SELECT path FROM book_images WHERE book_id = b.id), '')`
 
 const listBooksSQL = `
 SELECT ` + bookColumns + `, a.name
@@ -102,7 +103,7 @@ func (s *BookStore) Get(ctx context.Context, id int64) (BookWithAuthor, error) {
 	var b BookWithAuthor
 	err := s.db.QueryRowContext(ctx, getBookSQL, id).Scan(
 		&b.ID, &b.AuthorID, &b.Name, &b.Summary, &b.PublicationDate,
-		&b.NumberOfSales, &b.AuthorName)
+		&b.NumberOfSales, &b.ImagePath, &b.AuthorName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return b, ErrNotFound
 	}
@@ -158,7 +159,7 @@ func scanBooksWithAuthor(rows *sql.Rows) ([]BookWithAuthor, error) {
 	for rows.Next() {
 		var b BookWithAuthor
 		if err := rows.Scan(&b.ID, &b.AuthorID, &b.Name, &b.Summary,
-			&b.PublicationDate, &b.NumberOfSales, &b.AuthorName); err != nil {
+			&b.PublicationDate, &b.NumberOfSales, &b.ImagePath, &b.AuthorName); err != nil {
 			return nil, err
 		}
 		books = append(books, b)

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+  namespace: book-review-app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: caddy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: caddy
+    spec:
+      nodeSelector:
+        bookreviews-storage: local
+      containers:
+        - name: caddy
+          image: bookreviews-edge:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_HOST
+              value: app.localhost
+            - name: APP_UPSTREAMS
+              value: book-review-app:8080
+            - name: UPSTREAM_KEEPALIVE
+              value: "off"
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          volumeMounts:
+            - name: media-data
+              mountPath: /media
+              readOnly: true
+            - name: caddy-data
+              mountPath: /data
+      volumes:
+        - name: media-data
+          persistentVolumeClaim:
+            claimName: media-data
+        - name: caddy-data
+          persistentVolumeClaim:
+            claimName: caddy-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caddy
+  namespace: book-review-app
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: caddy
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 30080
+    - name: https
+      port: 443
+      targetPort: https
+      nodePort: 30443

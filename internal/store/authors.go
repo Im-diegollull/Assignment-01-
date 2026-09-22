@@ -14,7 +14,8 @@ type AuthorStore struct{ db *sql.DB }
 // Las columnas opcionales salen con COALESCE para que un NULL se lea como ""
 // y models.Author pueda usar string en vez de sql.NullString.
 const authorColumns = `id, name, COALESCE(date_of_birth, ''), ` +
-	`COALESCE(country_of_origin, ''), COALESCE(description, '')`
+	`COALESCE(country_of_origin, ''), COALESCE(description, ''), ` +
+	`COALESCE((SELECT path FROM author_images WHERE author_id = authors.id), '')`
 
 const listAuthorsSQL = `
 SELECT ` + authorColumns + `
@@ -128,5 +129,5 @@ func (s *AuthorStore) Delete(ctx context.Context, id int64) error {
 type scanner interface{ Scan(dest ...any) error }
 
 func scanAuthor(src scanner, a *models.Author) error {
-	return src.Scan(&a.ID, &a.Name, &a.DateOfBirth, &a.CountryOfOrigin, &a.Description)
+	return src.Scan(&a.ID, &a.Name, &a.DateOfBirth, &a.CountryOfOrigin, &a.Description, &a.ImagePath)
 }

@@ -2,6 +2,9 @@
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal
+/data/media/
+/load-tests/results/
+/validation-results/
 
 # Binarios compilados
 /bin/

@@ -20,7 +20,7 @@ RUN go build -trimpath -ldflags="-s -w" -o /out/seed ./cmd/seed
 FROM alpine:3.20 AS db-admin
 
 RUN apk add --no-cache sqlite && \
-    addgroup -S app && adduser -S -G app app && \
+    addgroup -S -g 101 app && adduser -S -u 100 -G app app && \
     mkdir -p /data && chown app:app /data
 
 WORKDIR /app
@@ -36,11 +36,16 @@ USER app
 
 ENTRYPOINT ["/app/db-entrypoint.sh"]
 
+FROM caddy:2-alpine AS edge
+
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY web/static /srv/static
+
 FROM alpine:3.20 AS final
 
 RUN apk add --no-cache ca-certificates && \
-    addgroup -S app && adduser -S -G app app && \
-    mkdir -p /data && chown app:app /data
+    addgroup -S -g 101 app && adduser -S -u 100 -G app app && \
+    mkdir -p /data /media && chown app:app /data /media
 
 WORKDIR /app
 COPY --from=build /out/server /app/server

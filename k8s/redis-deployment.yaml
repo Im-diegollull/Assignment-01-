@@ -7,6 +7,8 @@ metadata:
     app.kubernetes.io/name: redis
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: redis
@@ -15,10 +17,15 @@ spec:
       labels:
         app.kubernetes.io/name: redis
     spec:
+      nodeSelector:
+        bookreviews-storage: local
       containers:
         - name: redis
           image: redis:7-alpine
-          args: ["redis-server", "--save", "", "--appendonly", "no"]
+          args: ["redis-server", "--appendonly", "yes"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
           ports:
             - name: redis
               containerPort: 6379
@@ -30,6 +37,10 @@ spec:
             exec:
               command: ["redis-cli", "ping"]
             periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-data
 ---
 apiVersion: v1
 kind: Service

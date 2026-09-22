@@ -17,19 +17,20 @@ func main() {
 	var (
 		dbPath   = flag.String("db", envOrDefault("DB_PATH", database.DefaultPath), "ruta del archivo SQLite")
 		reset    = flag.Bool("reset", false, "vaciar las tablas antes de sembrar")
+		ifEmpty  = flag.Bool("if-empty", false, "omitir el seed si la base ya contiene datos")
 		randSeed = flag.Int64("seed", 42, "semilla del generador; la misma semilla produce los mismos datos")
 	)
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	if err := run(*dbPath, *reset, *randSeed, logger); err != nil {
+	if err := run(*dbPath, *reset, *ifEmpty, *randSeed, logger); err != nil {
 		logger.Error("el seed falló", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run(dbPath string, reset bool, randSeed int64, logger *slog.Logger) error {
+func run(dbPath string, reset, ifEmpty bool, randSeed int64, logger *slog.Logger) error {
 	ctx := context.Background()
 
 	db, err := database.Open(ctx, dbPath)
@@ -43,6 +44,15 @@ func run(dbPath string, reset bool, randSeed int64, logger *slog.Logger) error {
 	}
 
 	st := store.New(db)
+	if ifEmpty && !reset {
+		counts, err := st.Count(ctx)
+		if err != nil {
+			return err
+		}
+		if !counts.Empty() {
+			return nil
+		}
+	}
 	if err := prepare(ctx, st, reset, logger); err != nil {
 		return err
 	}

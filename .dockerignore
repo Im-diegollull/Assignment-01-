@@ -3,6 +3,8 @@
 
 # Base de datos de desarrollo 
 data/
+load-tests/results/
+validation-results/
 *.db
 *.db-shm
 *.db-wal

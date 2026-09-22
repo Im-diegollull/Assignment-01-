@@ -1,0 +1,35 @@
+services:
+  app:
+    ports: !reset []
+    environment:
+      PORT: "8080"
+      USE_REVERSE_PROXY: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+      start_period: 60s
+  caddy:
+    networks:
+      default:
+        aliases: [app.localhost]
+    build:
+      context: .
+      target: edge
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      APP_HOST: ${APP_HOST:-app.localhost}
+      APP_UPSTREAMS: app:8080
+    volumes:
+      - media-data:/media:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+volumes:
+  caddy-data:
+  caddy-config:

@@ -13,3 +13,7 @@ data:
   DB_PATH: "/data/app.db"
   REDIS_ADDR: "redis:6379"
   OPENSEARCH_URL: "http://opensearch:9200"
+  MEDIA_ROOT: "/media"
+  USE_REVERSE_PROXY: "true"
+  SESSION_BACKEND: "redis"
+  REINDEX_ON_START: "false"

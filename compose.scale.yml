@@ -1,0 +1,13 @@
+services:
+  app2:
+    profiles: !reset []
+  app3:
+    profiles: !reset []
+  caddy:
+    environment:
+      APP_UPSTREAMS: app:8080 app2:8080 app3:8080
+    depends_on:
+      app2:
+        condition: service_healthy
+      app3:
+        condition: service_healthy

@@ -6,12 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/name: book-review-app
 spec:
-  replicas: 1
+  replicas: 3
   strategy:
-    # Recreate, no RollingUpdate: con accessMode ReadWriteOnce y un solo
-    # escritor posible, un rolling update normal podría intentar levantar el
-    # pod nuevo antes de apagar el viejo y los dos pelearían por el mismo
-    # volumen. Recreate apaga el pod actual antes de crear el siguiente.
     type: Recreate
   selector:
     matchLabels:
@@ -21,6 +17,13 @@ spec:
       labels:
         app.kubernetes.io/name: book-review-app
     spec:
+      nodeSelector:
+        bookreviews-storage: local
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
       containers:
         - name: app
           # Imagen buildeada localmente desde el Dockerfile de la Fase 1:
@@ -40,6 +43,14 @@ spec:
           volumeMounts:
             - name: sqlite-data
               mountPath: /data
+            - name: media-data
+              mountPath: /media
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /healthz
@@ -58,3 +69,6 @@ spec:
         - name: sqlite-data
           persistentVolumeClaim:
             claimName: sqlite-data
+        - name: media-data
+          persistentVolumeClaim:
+            claimName: media-data

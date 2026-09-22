@@ -14,6 +14,15 @@
   </div>
 </div>
 
+{{if .Book.ImagePath}}
+<img class="entity-image" src="/media/{{.Book.ImagePath}}" alt="Portada de {{.Book.Name}}" width="240" height="300">
+{{end}}
+<form method="post" action="/books/{{.Book.ID}}/image" enctype="multipart/form-data" class="image-form">
+  <label for="Image">Portada</label>
+  <input type="file" id="Image" name="Image" accept="image/png,image/jpeg,image/gif" required>
+  <button type="submit" class="btn btn-secondary">Guardar imagen</button>
+</form>
+
 <dl class="detail">
   <dt>Autor</dt>
   <dd><a href="/authors/{{.Book.AuthorID}}">{{.Book.AuthorName}}</a></dd>

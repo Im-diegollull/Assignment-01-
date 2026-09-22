@@ -13,6 +13,7 @@ import (
 	"bookreviews/internal/database"
 	"bookreviews/internal/handlers"
 	"bookreviews/internal/search"
+	"bookreviews/internal/session"
 	"bookreviews/internal/stats"
 	"bookreviews/internal/store"
 	"bookreviews/internal/web"
@@ -23,12 +24,13 @@ func main() {
 		addr        = flag.String("addr", ":"+envOrDefault("PORT", "8080"), "dirección HTTP de escucha")
 		dbPath      = flag.String("db", envOrDefault("DB_PATH", database.DefaultPath), "ruta del archivo SQLite")
 		migrateOnly = flag.Bool("migrate", false, "aplicar el esquema y salir, sin levantar el servidor")
+		reindexOnly = flag.Bool("reindex", false, "reindexar OpenSearch y salir")
 	)
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	if err := run(*addr, *dbPath, *migrateOnly, logger); err != nil {
+	if err := run(*addr, *dbPath, *migrateOnly, *reindexOnly, logger); err != nil {
 		logger.Error("el servidor terminó con error", "error", err)
 		os.Exit(1)
 	}
@@ -36,7 +38,7 @@ func main() {
 
 // run arma el grafo de dependencias y bloquea sirviendo. Está separado de main
 // para poder devolver error en vez de llamar a os.Exit desde varios puntos.
-func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
+func run(addr, dbPath string, migrateOnly, reindexOnly bool, logger *slog.Logger) error {
 	ctx := context.Background()
 
 	db, err := database.Open(ctx, dbPath)
@@ -77,23 +79,43 @@ func run(addr, dbPath string, migrateOnly bool, logger *slog.Logger) error {
 		if err != nil {
 			return err
 		}
-		if err := osEngine.ReindexAll(ctx); err != nil {
-			return err
+		if reindexOnly || envOrDefault("REINDEX_ON_START", "true") == "true" {
+			if err := osEngine.ReindexAll(ctx); err != nil {
+				return err
+			}
 		}
 		engine = osEngine
 		logger.Info("OpenSearch conectado e índice sincronizado", "url", url)
 	} else {
 		logger.Info("búsqueda SQL: OPENSEARCH_URL vacío")
 	}
+	if reindexOnly {
+		return nil
+	}
 
 	handler, err := handlers.New(logger, st, stats.New(st, cacheClient, logger), engine)
 	if err != nil {
 		return err
 	}
+	handler.ConfigureFiles(envOrDefault("MEDIA_ROOT", "data/media"), envOrDefault("USE_REVERSE_PROXY", "false") == "true")
+	var routes http.Handler = handler.Routes()
+	if envOrDefault("SESSION_BACKEND", "off") == "redis" {
+		sessions, err := session.Open(ctx, envOrDefault("REDIS_ADDR", "redis:6379"), envOrDefault("USE_REVERSE_PROXY", "false") == "true")
+		if err != nil {
+			return err
+		}
+		defer sessions.Close()
+		routes = sessions.Middleware(routes)
+	}
+	instance := envOrDefault("HOSTNAME", "local")
+	withInstance := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-App-Instance", instance)
+		routes.ServeHTTP(w, r)
+	})
 
 	srv := &http.Server{
 		Addr: addr,
-		Handler: web.Chain(handler.Routes(),
+		Handler: web.Chain(withInstance,
 			web.RecoverPanic(logger),
 			web.LogRequests(logger),
 		),

@@ -20,8 +20,11 @@ services:
     environment:
       PORT: ${APP_PORT:-8080}
       DB_PATH: ${DB_PATH:-/data/app.db}
+      MEDIA_ROOT: /media
     volumes:
       - sqlite-data:/data
+      - media-data:/media
 
 volumes:
   sqlite-data:
+  media-data:
