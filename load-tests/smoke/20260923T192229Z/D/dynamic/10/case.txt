@@ -1,0 +1,6 @@
+deployment=D
+endpoint=dynamic
+path=/books/1
+requests=10
+duration_seconds=5
+cache=warm

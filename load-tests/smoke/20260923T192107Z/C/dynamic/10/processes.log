@@ -1,0 +1,17 @@
+
+2026-09-23T19:22:19Z ecc9fab39062531b94dcafeb82272eacfb9ae5c174e6b7ad6f29434e5c8ec6a6
+PID                 PPID                %CPU                RSS                 NLWP                COMMAND
+4573                4550                0.4                 21980               10                  server
+
+2026-09-23T19:22:19Z 3a8989df775e7a68b1e5a95f9a2aa8104cca408375ccd68b5f2d0a5b41762ea6
+PID                 PPID                %CPU                RSS                 NLWP                COMMAND
+4731                4708                1.1                 51076               15                  caddy
+
+2026-09-23T19:22:19Z 18badd82eb4a124ea5c52459f2112e112848d421d2cb5892d0d4b5a5059d2881
+PID                 PPID                %CPU                RSS                 NLWP                COMMAND
+3550                3490                83.0                976768              92                  java
+3637                3550                2.9                 100460              16                  java
+
+2026-09-23T19:22:19Z 9f5af74ab122a293e651bfd4b01762d40bdb9befcb5b4856386aca8ec1b7458f
+PID                 PPID                %CPU                RSS                 NLWP                COMMAND
+3548                3475                0.7                 14408               6                   redis-server

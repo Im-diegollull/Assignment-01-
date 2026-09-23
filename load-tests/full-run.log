@@ -1,0 +1,248 @@
+ Container assignment4-load-caddy-1 Stopping 
+ Container assignment4-load-caddy-1 Stopped 
+ Container assignment4-load-caddy-1 Removing 
+ Container assignment4-load-caddy-1 Removed 
+ Container assignment4-load-app-1 Stopping 
+ Container assignment4-load-app3-1 Stopping 
+ Container assignment4-load-app2-1 Stopping 
+ Container assignment4-load-app3-1 Stopped 
+ Container assignment4-load-app3-1 Removing 
+ Container assignment4-load-app3-1 Removed 
+ Container assignment4-load-app2-1 Stopped 
+ Container assignment4-load-app2-1 Removing 
+ Container assignment4-load-app2-1 Removed 
+ Container assignment4-load-app-1 Stopped 
+ Container assignment4-load-app-1 Removing 
+ Container assignment4-load-app-1 Removed 
+ Container assignment4-load-index-1 Stopping 
+ Container assignment4-load-redis-1 Stopping 
+ Container assignment4-load-index-1 Stopped 
+ Container assignment4-load-index-1 Removing 
+ Container assignment4-load-index-1 Removed 
+ Container assignment4-load-db-1 Stopping 
+ Container assignment4-load-opensearch-1 Stopping 
+ Container assignment4-load-db-1 Stopped 
+ Container assignment4-load-db-1 Removing 
+ Container assignment4-load-db-1 Removed 
+ Container assignment4-load-redis-1 Stopped 
+ Container assignment4-load-redis-1 Removing 
+ Container assignment4-load-redis-1 Removed 
+ Container assignment4-load-opensearch-1 Stopped 
+ Container assignment4-load-opensearch-1 Removing 
+ Container assignment4-load-opensearch-1 Removed 
+ Network assignment4-load_default Removing 
+ Network assignment4-load_default Removed 
+ Image assignment4-load-caddy Building 
+ Image assignment4-load-index Building 
+ Image assignment4-load-app Building 
+ Image assignment4-load-db Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.13kB done
+#1 DONE 0.0s
+
+#2 [index internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.50kB done
+#2 DONE 0.0s
+
+#3 [index] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#3 DONE 0.6s
+
+#4 [db] docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#4 resolve docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32 done
+#4 CACHED
+
+#5 [app internal] load metadata for docker.io/library/golang:1.26.5-alpine
+#5 ...
+
+#6 [caddy internal] load metadata for docker.io/library/caddy:2-alpine
+#6 DONE 0.5s
+
+#7 [app internal] load metadata for docker.io/library/alpine:3.20
+#7 DONE 0.5s
+
+#5 [index internal] load metadata for docker.io/library/golang:1.26.5-alpine
+#5 DONE 0.5s
+
+#8 [index internal] load .dockerignore
+#8 transferring context: 308B done
+#8 DONE 0.0s
+
+#9 [caddy internal] load build context
+#9 transferring context: 157B done
+#9 DONE 0.0s
+
+#10 [caddy edge 1/3] FROM docker.io/library/caddy:2-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+#10 resolve docker.io/library/caddy:2-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b 0.0s done
+#10 DONE 0.0s
+
+#11 [caddy edge 2/3] COPY docker/Caddyfile /etc/caddy/Caddyfile
+#11 CACHED
+
+#12 [caddy edge 3/3] COPY web/static /srv/static
+#12 CACHED
+
+#13 [db final 1/5] FROM docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#13 resolve docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc 0.0s done
+#13 DONE 0.0s
+
+#14 [db build 1/7] FROM docker.io/library/golang:1.26.5-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aabd498d0699ff5fb2
+#14 resolve docker.io/library/golang:1.26.5-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aabd498d0699ff5fb2 0.0s done
+#14 DONE 0.0s
+
+#15 [db internal] load build context
+#15 transferring context: 535.58kB 0.0s done
+#15 DONE 0.0s
+
+#16 [db build 3/7] COPY go.mod go.sum ./
+#16 CACHED
+
+#17 [db build 2/7] WORKDIR /src
+#17 CACHED
+
+#18 [db build 4/7] RUN go mod download
+#18 CACHED
+
+#19 [caddy] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:d2751e666644eaf8ced56ddeabde3963dcbbfbb08c85a6a0868fe68f5029af53 done
+#19 exporting config sha256:9688c50b34b83815865bccbfe9dc026fb18ad3f9b1bbfb7112b61a0117379a06 done
+#19 exporting attestation manifest sha256:eceac12295d47fc2257b01009435ba8a3cd68840149e20b3ea6ab97b53dd2232 0.0s done
+#19 exporting manifest list sha256:92f7ea4d465595f44310c06e4a6cf7141d8b8a12bc4c85016e9ca5a3c0d9aaa6 done
+#19 naming to docker.io/library/assignment4-load-caddy:latest done
+#19 unpacking to docker.io/library/assignment4-load-caddy:latest done
+#19 DONE 0.1s
+
+#20 [db build 5/7] COPY . .
+#20 DONE 0.0s
+
+#21 [caddy] resolving provenance for metadata file
+#21 DONE 0.0s
+
+#22 [index build 6/7] RUN go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
+#22 DONE 9.9s
+
+#23 [db build 7/7] RUN go build -trimpath -ldflags="-s -w" -o /out/seed ./cmd/seed
+#23 DONE 0.5s
+
+#24 [index final 2/5] RUN apk add --no-cache ca-certificates &&     addgroup -S -g 101 app && adduser -S -u 100 -G app app &&     mkdir -p /data /media && chown app:app /data /media
+#24 CACHED
+
+#25 [index final 4/5] COPY --from=build /out/server /app/server
+#25 CACHED
+
+#26 [index final 3/5] WORKDIR /app
+#26 CACHED
+
+#27 [index final 5/5] COPY --from=build /out/seed /app/seed
+#27 CACHED
+
+#28 [db db-admin 2/7] RUN apk add --no-cache sqlite &&     addgroup -S -g 101 app && adduser -S -u 100 -G app app &&     mkdir -p /data && chown app:app /data
+#28 CACHED
+
+#29 [db db-admin 3/7] WORKDIR /app
+#29 CACHED
+
+#30 [db db-admin 5/7] COPY --from=build /out/seed /app/seed
+#30 CACHED
+
+#31 [db db-admin 6/7] COPY docker/db-entrypoint.sh /app/
+#31 CACHED
+
+#32 [db db-admin 4/7] COPY --from=build /out/server /app/server
+#32 CACHED
+
+#33 [db db-admin 7/7] RUN chmod +x /app/db-entrypoint.sh
+#33 CACHED
+
+#34 [index] exporting to image
+#34 exporting layers done
+#34 exporting manifest sha256:30909c03e1d01750057fb9710126445e2fd2b5b21b5595c3352dfa5a56dec624 done
+#34 exporting config sha256:610aaebba1d788680a80a9489c6024e9de94e2c773adb34f7b30aaa216f9c54a done
+#34 exporting attestation manifest sha256:6c13b1803466ddd9be69c001aa6c61dc5ba0a8ed3f2410358687d5d303c00526 0.0s done
+#34 exporting manifest list sha256:69c1acdc185f67c14072a4dfffcab6cba719f0db2459683febf7f1a7c7c16a72 0.0s done
+#34 naming to docker.io/library/assignment4-load-index:latest done
+#34 unpacking to docker.io/library/assignment4-load-index:latest done
+#34 DONE 0.1s
+
+#35 [app] exporting to image
+#35 exporting layers done
+#35 exporting manifest sha256:d415d967cef42531124075a93517f441f3149912952db03c686d32389df76969 done
+#35 exporting config sha256:0a2eac1a16f216ebb83bd0872ad16dff7edb4b149df597f383db4d036b946f04 done
+#35 exporting attestation manifest sha256:7f1b08ba4d7ea3732d5f67adb2197ba2ab54f7989fe710b3396d26671af5a1d4 0.0s done
+#35 exporting manifest list sha256:a4392c2e7f6f29c426c2f15214e0a3ec04fd2b9f18814f67dadcbb0bb8e48ac1 0.0s done
+#35 naming to docker.io/library/assignment4-load-app:latest done
+#35 unpacking to docker.io/library/assignment4-load-app:latest 0.0s done
+#35 DONE 0.1s
+
+#36 [db] exporting to image
+#36 exporting layers done
+#36 exporting manifest sha256:2a9e38ee4fa4fea604ac61c147a42fc1f42e920f206ec4af15db6d3d0d5f51c0 done
+#36 exporting config sha256:2cd64075cdc25f547517de8b12a71cb324812633c7aa5e1b6ac4159250563fd6 done
+#36 exporting attestation manifest sha256:dd89a6c905d9c14f31c68be04a2f36b8fcab96c6b3727ec87ce69776c1eed097 0.0s done
+#36 exporting manifest list sha256:9a0e83ee45efde478aef57dcead36598d625d2db9907aff458505f5f70ffedad 0.0s done
+#36 naming to docker.io/library/assignment4-load-db:latest done
+#36 unpacking to docker.io/library/assignment4-load-db:latest 0.0s done
+#36 DONE 0.1s
+
+#37 [index] resolving provenance for metadata file
+#37 DONE 0.0s
+
+#38 [app] resolving provenance for metadata file
+#38 DONE 0.0s
+
+#39 [db] resolving provenance for metadata file
+#39 DONE 0.0s
+ Image assignment4-load-app Built 
+ Image assignment4-load-caddy Built 
+ Image assignment4-load-db Built 
+ Image assignment4-load-index Built 
+ Network assignment4-load_default Creating 
+ Network assignment4-load_default Created 
+ Container assignment4-load-redis-1 Creating 
+ Container assignment4-load-opensearch-1 Creating 
+ Container assignment4-load-db-1 Creating 
+ Container assignment4-load-db-1 Created 
+ Container assignment4-load-opensearch-1 Created 
+ Container assignment4-load-index-1 Creating 
+ Container assignment4-load-redis-1 Created 
+ Container assignment4-load-index-1 Created 
+ Container assignment4-load-app-1 Creating 
+ Container assignment4-load-app-1 Created 
+ Container assignment4-load-caddy-1 Creating 
+ Container assignment4-load-caddy-1 Created 
+ Container assignment4-load-redis-1 Starting 
+ Container assignment4-load-opensearch-1 Starting 
+ Container assignment4-load-db-1 Starting 
+ Container assignment4-load-db-1 Started 
+ Container assignment4-load-redis-1 Started 
+ Container assignment4-load-opensearch-1 Started 
+ Container assignment4-load-db-1 Waiting 
+ Container assignment4-load-opensearch-1 Waiting 
+ Container assignment4-load-db-1 Exited 
+ Container assignment4-load-opensearch-1 Healthy 
+ Container assignment4-load-index-1 Starting 
+ Container assignment4-load-index-1 Started 
+ Container assignment4-load-index-1 Waiting 
+ Container assignment4-load-redis-1 Waiting 
+ Container assignment4-load-redis-1 Healthy 
+ Container assignment4-load-index-1 Exited 
+ Container assignment4-load-app-1 Starting 
+ Container assignment4-load-app-1 Started 
+ Container assignment4-load-app-1 Waiting 
+ Container assignment4-load-app-1 Healthy 
+ Container assignment4-load-caddy-1 Starting 
+ Container assignment4-load-caddy-1 Started 
+latest: Pulling from grafana/k6
+Digest: sha256:e66db15b860113878fa74670e31f5e274830b7b6e42c8bff28b2f2d86a257603
+Status: Image is up to date for grafana/k6:latest
+docker.io/grafana/k6:latest
+C static 1: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/static/1
+C static 10: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/static/10
+C static 100: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/static/100
+C static 1000: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/static/1000
+C static 5000: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/static/5000
+C aggregate 1: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/aggregate/1
+C aggregate 10: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/aggregate/10
+C aggregate 100: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/aggregate/100
+C aggregate 1000: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/aggregate/1000
+C aggregate 5000: exit=0 results=/Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-/load-tests/results/20260923T192337Z/C/aggregate/5000

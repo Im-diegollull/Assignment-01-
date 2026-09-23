@@ -1,0 +1,5 @@
+2026-09-23T19:22:06Z
+{"BlockIO":"0B / 32.8kB","CPUPerc":"0.50%","Container":"ecc9fab39062531b94dcafeb82272eacfb9ae5c174e6b7ad6f29434e5c8ec6a6","ID":"ecc9fab39062","MemPerc":"0.11%","MemUsage":"8.875MiB / 7.75GiB","Name":"assignment4-load-app-1","NetIO":"45.2kB / 126kB","PIDs":"9"}
+{"BlockIO":"0B / 250kB","CPUPerc":"1.08%","Container":"3a8989df775e7a68b1e5a95f9a2aa8104cca408375ccd68b5f2d0a5b41762ea6","ID":"3a8989df775e","MemPerc":"0.20%","MemUsage":"16.18MiB / 7.75GiB","Name":"assignment4-load-caddy-1","NetIO":"154kB / 259kB","PIDs":"17"}
+{"BlockIO":"192MB / 27.2MB","CPUPerc":"3.85%","Container":"18badd82eb4a124ea5c52459f2112e112848d421d2cb5892d0d4b5a5059d2881","ID":"18badd82eb4a","MemPerc":"13.46%","MemUsage":"1.043GiB / 7.75GiB","Name":"assignment4-load-opensearch-1","NetIO":"777kB / 722kB","PIDs":"102"}
+{"BlockIO":"10.1MB / 20.5kB","CPUPerc":"1.83%","Container":"9f5af74ab122a293e651bfd4b01762d40bdb9befcb5b4856386aca8ec1b7458f","ID":"9f5af74ab122","MemPerc":"0.24%","MemUsage":"19.04MiB / 7.75GiB","Name":"assignment4-load-redis-1","NetIO":"14.3kB / 38.1kB","PIDs":"6"}

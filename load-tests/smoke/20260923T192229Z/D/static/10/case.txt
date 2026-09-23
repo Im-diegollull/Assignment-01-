@@ -1,0 +1,6 @@
+deployment=D
+endpoint=static
+path=/static/style.css
+requests=10
+duration_seconds=5
+cache=warm

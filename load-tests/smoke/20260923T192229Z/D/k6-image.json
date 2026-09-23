@@ -1,0 +1,50 @@
+[
+    {
+        "Id": "sha256:e66db15b860113878fa74670e31f5e274830b7b6e42c8bff28b2f2d86a257603",
+        "RepoTags": [
+            "grafana/k6:latest"
+        ],
+        "RepoDigests": [
+            "grafana/k6@sha256:e66db15b860113878fa74670e31f5e274830b7b6e42c8bff28b2f2d86a257603"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-09-21T15:08:50.792185216Z",
+        "Config": {
+            "User": "12345",
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+                "k6"
+            ],
+            "WorkingDir": "/home/k6"
+        },
+        "Architecture": "arm64",
+        "Os": "linux",
+        "Size": 34001345,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:b2848c02ac6ff53d265469b5b30f649f335e546a83330cd8916d54e65e640409",
+                "sha256:0f48f9714ced66e09d4d28a1b3f9f7d3e514865c36e6e3314de3730b047bd20e",
+                "sha256:150d9bfe4e83baa158b6b62bd92acd306f8d58aeb9aa2e62914af4f0bab78537",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-09-23T19:23:05.429843627Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:e66db15b860113878fa74670e31f5e274830b7b6e42c8bff28b2f2d86a257603",
+            "size": 1609
+        },
+        "Identity": {
+            "Pull": [
+                {
+                    "Repository": "docker.io/grafana/k6"
+                }
+            ]
+        }
+    }
+]

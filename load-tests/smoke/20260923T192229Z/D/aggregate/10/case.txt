@@ -1,0 +1,6 @@
+deployment=D
+endpoint=aggregate
+path=/books/top-selling
+requests=10
+duration_seconds=5
+cache=warm

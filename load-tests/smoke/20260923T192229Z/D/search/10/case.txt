@@ -1,0 +1,6 @@
+deployment=D
+endpoint=search
+path=/search?q=isla
+requests=10
+duration_seconds=5
+cache=warm

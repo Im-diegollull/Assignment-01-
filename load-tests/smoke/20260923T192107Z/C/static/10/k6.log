@@ -1,0 +1,80 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/scenario.js
+        output: json (/results/requests.json)
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 35s max duration (incl. graceful stop):
+              * endpoint: 2.00 iterations/s for 5s (maxVUs: 20-100, gracefulStop: 30s)
+
+
+running (01.0s), 000/020 VUs, 2 complete and 0 interrupted iterations
+endpoint   [  20% ] 000/020 VUs  1.0s/5s  2.00 iters/s
+
+running (02.0s), 000/020 VUs, 4 complete and 0 interrupted iterations
+endpoint   [  40% ] 000/020 VUs  2.0s/5s  2.00 iters/s
+
+running (03.0s), 000/020 VUs, 6 complete and 0 interrupted iterations
+endpoint   [  60% ] 000/020 VUs  3.0s/5s  2.00 iters/s
+
+running (04.0s), 000/020 VUs, 8 complete and 0 interrupted iterations
+endpoint   [  80% ] 000/020 VUs  4.0s/5s  2.00 iters/s
+
+running (05.0s), 000/020 VUs, 10 complete and 0 interrupted iterations
+endpoint   [ 100% ] 000/020 VUs  5.0s/5s  2.00 iters/s
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    dropped_iterations
+    ✓ 'count==0' count=0
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+    http_reqs
+    ✓ 'count==10' count=10
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 10      1.999385/s
+    checks_succeeded...: 100.00% 10 out of 10
+    checks_failed......: 0.00%   0 out of 10
+
+    ✓ HTTP 200
+
+    CUSTOM
+    response_status................: 10     1.999385/s
+
+    HTTP
+    http_req_duration..............: avg=1.06ms min=574.25µs med=1.06ms max=1.47ms p(90)=1.39ms p(95)=1.43ms
+      { expected_response:true }...: avg=1.06ms min=574.25µs med=1.06ms max=1.47ms p(90)=1.39ms p(95)=1.43ms
+    http_req_failed................: 0.00%  0 out of 10
+    http_reqs......................: 10     1.999385/s
+
+    EXECUTION
+    dropped_iterations.............: 0      0/s
+    iteration_duration.............: avg=5.47ms min=248.41µs med=5.17ms max=9.84ms p(90)=9.83ms p(95)=9.84ms
+    iterations.....................: 11     2.199324/s
+    vus............................: 0      min=0       max=0 
+    vus_max........................: 20     min=20      max=20
+
+    NETWORK
+    data_received..................: 143 kB 29 kB/s
+    data_sent......................: 18 kB  3.7 kB/s
+
+
+
+
+running (05.0s), 000/020 VUs, 11 complete and 0 interrupted iterations
+endpoint ✓ [ 100% ] 000/020 VUs  5s  2.00 iters/s

@@ -1,0 +1,220 @@
+name: assignment4-load
+services:
+  app:
+    build:
+      context: /Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-
+      dockerfile: Dockerfile
+      target: final
+    depends_on:
+      index:
+        condition: service_completed_successfully
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      DB_PATH: /data/app.db
+      MEDIA_ROOT: /media
+      OPENSEARCH_URL: http://opensearch:9200
+      PORT: "8080"
+      REDIS_ADDR: redis:6379
+      REINDEX_ON_START: "false"
+      SESSION_BACKEND: redis
+      USE_REVERSE_PROXY: "true"
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - --spider
+        - http://localhost:8080/healthz
+      timeout: 2s
+      interval: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: sqlite-data
+        target: /data
+        volume: {}
+      - type: volume
+        source: media-data
+        target: /media
+        volume: {}
+  caddy:
+    build:
+      context: /Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-
+      dockerfile: Dockerfile
+      target: edge
+    depends_on:
+      app:
+        condition: service_healthy
+        required: true
+    environment:
+      APP_HOST: app.localhost
+      APP_UPSTREAMS: app:8080
+    networks:
+      default:
+        aliases:
+          - app.localhost
+    ports:
+      - mode: ingress
+        target: 80
+        published: "18080"
+        protocol: tcp
+      - mode: ingress
+        target: 443
+        published: "18443"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: media-data
+        target: /media
+        read_only: true
+        volume: {}
+      - type: volume
+        source: caddy-data
+        target: /data
+        volume: {}
+      - type: volume
+        source: caddy-config
+        target: /config
+        volume: {}
+  db:
+    build:
+      context: /Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-
+      dockerfile: Dockerfile
+      target: db-admin
+    environment:
+      DB_PATH: /data/app.db
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: sqlite-data
+        target: /data
+        volume: {}
+  index:
+    build:
+      context: /Users/diego/Dev/universidad/2026-2/arqui/Assignment-01-
+      dockerfile: Dockerfile
+      target: final
+    command:
+      - -reindex
+    depends_on:
+      db:
+        condition: service_completed_successfully
+        required: true
+      opensearch:
+        condition: service_healthy
+        required: true
+    environment:
+      DB_PATH: /data/app.db
+      OPENSEARCH_URL: http://opensearch:9200
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: sqlite-data
+        target: /data
+        volume: {}
+  opensearch:
+    environment:
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+      discovery.type: single-node
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sf http://localhost:9200/_cluster/health >/dev/null
+      timeout: 5s
+      interval: 10s
+      retries: 20
+      start_period: 30s
+    image: opensearchproject/opensearch:2.17.1
+    networks:
+      default: null
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - type: volume
+        source: search-data
+        target: /usr/share/opensearch/data
+        volume: {}
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 2s
+      interval: 2s
+      retries: 10
+    image: redis:7-alpine
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: redis-data
+        target: /data
+        volume: {}
+networks:
+  default:
+    name: assignment4-load_default
+volumes:
+  caddy-config:
+    name: assignment4-load_caddy-config
+  caddy-data:
+    name: assignment4-load_caddy-data
+  media-data:
+    name: assignment4-load_media-data
+  redis-data:
+    name: assignment4-load_redis-data
+  search-data:
+    name: assignment4-load_search-data
+  sqlite-data:
+    name: assignment4-load_sqlite-data
+x-app:
+  build:
+    context: .
+    target: final
+  depends_on:
+    index:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+  environment:
+    DB_PATH: /data/app.db
+    MEDIA_ROOT: /media
+    OPENSEARCH_URL: http://opensearch:9200
+    PORT: "8080"
+    REDIS_ADDR: redis:6379
+    REINDEX_ON_START: "false"
+    SESSION_BACKEND: redis
+    USE_REVERSE_PROXY: "true"
+  healthcheck:
+    interval: 5s
+    retries: 12
+    start_period: 30s
+    test:
+      - CMD
+      - wget
+      - -q
+      - --spider
+      - http://localhost:8080/healthz
+    timeout: 2s
+  volumes:
+    - sqlite-data:/data
+    - media-data:/media
